@@ -115,6 +115,9 @@
 }
 .adv-node { transition: transform 0.2s ease; }
 .adv-node:hover { transform: scale(1.06); transform-box: fill-box; transform-origin: center; }
+.adv-node.locked { opacity: 0.55; }
+.adv-node.locked:hover { transform: none; }
+.adv-node.locked .adv-node-label { fill: var(--text-muted); }
 .adv-node-num { font-size: 10px; font-weight: 800; }
 .adv-node-label {
   font-size: 9.5px;
@@ -134,6 +137,27 @@
   padding: 0.25rem 0.55rem;
   border-radius: 6px;
 }
+
+/* 鎖定提示（對齊科目 A–F） */
+.adv-lock {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+}
+.adv-lock h4 { color: #f87171; margin: 0 0 0.5rem; font-size: 0.95rem; }
+.adv-lock p { font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary); margin: 0 0 0.9rem; }
+.adv-lock-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.adv-lock-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 6px; padding: 0.6rem 0.8rem;
+  font-size: 0.82rem; color: var(--text-muted);
+}
+.adv-lock-row.done { border-color: rgba(16, 185, 129, 0.3); color: var(--text-primary); }
+.adv-lock-status { font-weight: 700; color: #f87171; }
+.adv-lock-row.done .adv-lock-status { color: var(--subject-a); }
 
 .adv-gap, .adv-skill, .adv-obj, .adv-code, .adv-checklist { margin-bottom: 1.3rem; }
 .adv-gap h4, .adv-obj h4 { font-size: 0.92rem; margin: 0 0 0.5rem; }
