@@ -797,49 +797,94 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+
+    // 進階模式解鎖檢查：完成 A–F 全部章節後，彈出進階圖譜
+    if (window.AdvancedMode && typeof window.AdvancedMode.refreshUnlock === 'function') {
+      window.AdvancedMode.refreshUnlock(state.completedTopics);
+    }
+    updateAdvancedProgressUI();
   }
 
-  // --- RENDER CANVAS HEXAGONAL RADAR CHART ---
+  // --- 進階科目 G 進度（接進左側進度卡） ---
+  function updateAdvancedProgressUI() {
+    const row = document.getElementById('advancedProgressRow');
+    if (!row) return;
+    const prog = (window.AdvancedMode && window.AdvancedMode.getProgress)
+      ? window.AdvancedMode.getProgress()
+      : { done: 0, total: 10, unlocked: false };
+
+    // 解鎖後才顯示 G 軌道
+    row.style.display = prog.unlocked ? 'block' : 'none';
+    if (!prog.unlocked) return;
+
+    const scoreG = document.getElementById('scoreTextG');
+    const fillG = document.getElementById('advancedBarFill');
+    const pct = prog.total ? Math.round((prog.done / prog.total) * 100) : 0;
+    if (fillG) fillG.style.width = `${pct}%`;
+    if (scoreG) {
+      if (prog.done >= prog.total) {
+        scoreG.innerHTML = `<span style="color:hsl(48,96%,60%); font-weight:800;">🏅 已養成 (${prog.done}/${prog.total})</span>`;
+      } else {
+        scoreG.textContent = `${prog.done}/${prog.total}`;
+      }
+    }
+  }
+
+  // --- RENDER CANVAS RADAR CHART (A–F + 進階 G) ---
   function renderRadarChart() {
     const canvas = elements.radarCanvas;
     const ctx = canvas.getContext('2d');
-    
+    if (!ctx) return; // headless / unsupported
+
     // Reset canvas resolution
     canvas.width = 160;
     canvas.height = 160;
-    
+
     const width = canvas.width;
     const height = canvas.height;
     const center = { x: width / 2, y: height / 2 };
-    const radius = 58;
-    
+    const radius = 54;
+
     ctx.clearRect(0, 0, width, height);
 
-    // 1. Calculate scores for the 6 subjects (A, B, C, D, E, F)
+    // 1. Base subject scores (A–F)
     const subjects = ['A', 'B', 'C', 'D', 'E', 'F'];
     const subjectMax = { A: 3, B: 3, C: 3, D: 3, E: 3, F: 3 };
     const subjectCurrent = { A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 };
-    
+
     state.completedTopics.forEach(topicId => {
       const topic = syllabusData.topics.find(t => t.id === topicId);
-      if (topic) {
-        subjectCurrent[topic.subject]++;
-      }
+      if (topic) subjectCurrent[topic.subject]++;
     });
 
-    const scores = subjects.map(s => subjectCurrent[s] / subjectMax[s]);
+    // 2. Build axes array — 6 base + 1 advanced (G)
+    const axes = subjects.map(s => ({
+      label: s,
+      value: subjectCurrent[s] / subjectMax[s],
+      color: syllabusData.subjects[s].color
+    }));
 
-    // 2. Draw radar chart polygon grid (3 layers - hexagonal)
+    const advProg = (window.AdvancedMode && window.AdvancedMode.getProgress)
+      ? window.AdvancedMode.getProgress()
+      : { done: 0, total: 10 };
+    axes.push({
+      label: 'G',
+      value: advProg.total ? advProg.done / advProg.total : 0,
+      color: 'hsl(48, 96%, 60%)'
+    });
+
+    const N = axes.length; // 7
+    const angleAt = i => (Math.PI * 2 / N) * i - Math.PI / 2;
+
+    // 3. Polygon grid (3 layers)
     for (let layer = 1; layer <= 3; layer++) {
       ctx.beginPath();
       const layerRadius = (radius / 3) * layer;
-      
-      for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
-        const x = center.x + Math.cos(angle) * layerRadius;
-        const y = center.y + Math.sin(angle) * layerRadius;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+      for (let i = 0; i < N; i++) {
+        const a = angleAt(i);
+        const x = center.x + Math.cos(a) * layerRadius;
+        const y = center.y + Math.sin(a) * layerRadius;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       }
       ctx.closePath();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
@@ -847,54 +892,45 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.stroke();
     }
 
-    // 3. Draw 6 radar cross lines from center
+    // 4. Cross lines from center
     ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
+    for (let i = 0; i < N; i++) {
+      const a = angleAt(i);
       ctx.moveTo(center.x, center.y);
-      ctx.lineTo(center.x + Math.cos(angle) * radius, center.y + Math.sin(angle) * radius);
+      ctx.lineTo(center.x + Math.cos(a) * radius, center.y + Math.sin(a) * radius);
     }
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.stroke();
 
-    // 4. Draw Score filled hexagon
+    // 5. Score filled polygon
     ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
-      const score = Math.max(0.1, scores[i]); // Avoid collapsing to zero for beautiful fills
-      const x = center.x + Math.cos(angle) * (score * radius);
-      const y = center.y + Math.sin(angle) * (score * radius);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+    for (let i = 0; i < N; i++) {
+      const a = angleAt(i);
+      const score = Math.max(0.08, axes[i].value);
+      const x = center.x + Math.cos(a) * (score * radius);
+      const y = center.y + Math.sin(a) * (score * radius);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.closePath();
-    ctx.fillStyle = 'rgba(244, 63, 94, 0.2)'; // Crimson Pink Rose transparent fill
+    ctx.fillStyle = 'rgba(244, 63, 94, 0.2)';
     ctx.fill();
     ctx.strokeStyle = 'var(--subject-e)';
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // 5. Draw Subject Labels for 6 vertices
-    const labels = ['A', 'B', 'C', 'D', 'E', 'F'];
-    const offsets = [
-      { x: -4, y: -8 },  // Top A
-      { x: 8, y: -2 },   // Top Right B
-      { x: 8, y: 8 },    // Bottom Right C
-      { x: -4, y: 12 },  // Bottom D
-      { x: -14, y: 8 },  // Bottom Left E
-      { x: -14, y: -2 }  // Top Left F
-    ];
+    // 6. Axis labels (center-anchored, generalised for N axes)
     ctx.font = 'bold 10px var(--font-sans)';
-    
-    for (let i = 0; i < 6; i++) {
-      const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
-      const x = center.x + Math.cos(angle) * (radius + 11) + offsets[i].x;
-      const y = center.y + Math.sin(angle) * (radius + 11) + offsets[i].y;
-      
-      const subject = labels[i];
-      ctx.fillStyle = syllabusData.subjects[subject].color;
-      ctx.fillText(labels[i], x, y);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i < N; i++) {
+      const a = angleAt(i);
+      const x = center.x + Math.cos(a) * (radius + 12);
+      const y = center.y + Math.sin(a) * (radius + 12);
+      ctx.fillStyle = axes[i].color;
+      ctx.fillText(axes[i].label, x, y);
     }
+    ctx.textAlign = 'start';
+    ctx.textBaseline = 'alphabetic';
   }
 
   // --- MOCK EXAM SYSTEM ---
@@ -1253,6 +1289,12 @@ print(df[['date', 'title']].tail(5))
           renderExamQuestion(topic);
         }
       }
+    });
+
+    // 進階模組進度變動 → 即時刷新雷達圖與進度卡
+    document.addEventListener('finmath-advanced-changed', () => {
+      updateAdvancedProgressUI();
+      renderRadarChart();
     });
 
     // Mock Exam Listeners
