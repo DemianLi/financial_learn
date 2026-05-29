@@ -113,10 +113,25 @@
   stroke-opacity: 0.6;
   stroke-dasharray: none;
 }
-.adv-node { transition: transform 0.2s ease; }
-.adv-node:hover { transform: scale(1.06); transform-box: fill-box; transform-origin: center; }
-.adv-node.locked { opacity: 0.55; }
-.adv-node.locked:hover { transform: none; }
+.adv-node {
+  cursor: pointer;
+}
+.adv-node.locked {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.adv-node text {
+  pointer-events: none;
+}
+.adv-node-ring {
+  transition: var(--transition-smooth);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.adv-node:not(.locked):hover .adv-node-ring {
+  transform: scale(1.1);
+  stroke: var(--text-primary);
+}
 .adv-node.locked .adv-node-label { fill: var(--text-muted); }
 .adv-node-num { font-size: 10px; font-weight: 800; }
 .adv-node-label {
