@@ -1,0 +1,403 @@
+/* aiSandbox.css - Plug-and-play CSS for Taiwan Stock AI Analyst Sandbox */
+
+/* Theme Colors matching main styles */
+:root {
+  --ai-primary: hsl(263, 90%, 65%);   /* Purple */
+  --ai-secondary: hsl(187, 92%, 45%); /* Cyan */
+  --ai-success: hsl(142, 70%, 50%);   /* Emerald Green */
+  --ai-warning: hsl(24, 95%, 55%);    /* Amber */
+  --ai-terminal-bg: #030712;
+  --ai-terminal-text: #10b981;
+}
+
+/* Modal Styling specifically for AI Sandbox */
+.ai-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(7, 9, 19, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.ai-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ai-modal-box {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 1050px;
+  height: 85vh;
+  max-height: 800px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(139, 92, 246, 0.15);
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ai-modal-overlay.active .ai-modal-box {
+  transform: scale(1);
+}
+
+.ai-modal-header {
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.ai-modal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #fff 40%, var(--ai-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ai-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.6rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.ai-modal-close:hover {
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.ai-modal-body {
+  flex: 1;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1.1fr 1.2fr;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+/* LEFT COLUMN: Controls & Topology */
+.ai-col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  overflow-y: auto;
+  padding-right: 0.4rem;
+}
+
+.ai-card {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.2rem;
+  backdrop-filter: blur(8px);
+}
+
+.ai-form-group {
+  margin-bottom: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ai-form-group label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.ai-select, .ai-input {
+  background: #090d16;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #f8fafc;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.88rem;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.ai-select:focus, .ai-input:focus {
+  border-color: var(--ai-secondary);
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.25);
+}
+
+/* Agent Topology SVG Map */
+.ai-topology-wrapper {
+  flex: 1;
+  background: rgba(7, 9, 19, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  min-height: 280px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-topo-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Topology Node Animations */
+.topo-node {
+  transition: transform 0.3s ease;
+}
+
+.topo-node circle.glow {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: nodePulse 2s infinite ease-in-out;
+  display: none;
+}
+
+.topo-node.active circle.glow {
+  display: block;
+}
+
+.topo-node.active circle.core {
+  fill: currentColor;
+  stroke-width: 3.5;
+}
+
+.topo-node.completed circle.core {
+  fill: rgba(16, 185, 129, 0.2);
+  stroke: var(--ai-success);
+}
+
+/* Pulse animation for active node */
+@keyframes nodePulse {
+  0% {
+    r: 16px;
+    stroke-opacity: 0.8;
+  }
+  100% {
+    r: 28px;
+    stroke-opacity: 0;
+  }
+}
+
+/* Connection line pulse flow */
+.topo-link {
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 2.5;
+  transition: all 0.3s ease;
+}
+
+.topo-link.pulsing {
+  stroke: var(--ai-secondary);
+  stroke-dasharray: 6 6;
+  animation: lineFlow 1.2s linear infinite;
+  filter: drop-shadow(0 0 4px var(--ai-secondary));
+}
+
+.topo-link.completed {
+  stroke: var(--ai-success);
+}
+
+@keyframes lineFlow {
+  from {
+    stroke-dashoffset: 20;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Run simulation button */
+.btn-ai-run {
+  background: linear-gradient(135deg, var(--ai-primary) 0%, rgba(6, 182, 212, 0.8) 100%);
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.75rem 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-ai-run:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+  background: linear-gradient(135deg, var(--ai-primary) 10%, var(--ai-secondary) 100%);
+}
+
+.btn-ai-run:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: #64748b;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* RIGHT COLUMN: Console & Output Panel */
+.ai-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+/* Console Terminal style */
+.ai-terminal {
+  flex: 1;
+  background: var(--ai-terminal-bg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  font-family: 'JetBrains Mono', "Courier New", monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ai-terminal-text);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+  position: relative;
+}
+
+.ai-terminal-header {
+  font-size: 0.65rem;
+  color: #64748b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.terminal-line {
+  white-space: pre-wrap;
+  word-break: break-all;
+  animation: lineFadeIn 0.25s ease-out forwards;
+}
+
+@keyframes lineFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Generated deliverable card slide-up styles */
+.ai-deliverable-card {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1.5px solid var(--ai-success);
+  border-radius: 12px;
+  padding: 1.2rem;
+  display: none;
+  animation: deliverableSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);
+}
+
+@keyframes deliverableSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-del-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.ai-del-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ai-del-badge {
+  background: var(--ai-success);
+  color: #070913;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.ai-del-desc {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 0.8rem;
+  line-height: 1.4;
+}
+
+.ai-del-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.btn-ai-action {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-ai-action:hover {
+  background: var(--ai-success);
+  border-color: var(--ai-success);
+  color: #070913;
+}
+
+.btn-ai-action-primary {
+  background: var(--ai-success);
+  border: none;
+  color: #070913;
+  font-weight: 600;
+}
+
+.btn-ai-action-primary:hover {
+  background: hsl(142, 70%, 40%);
+}

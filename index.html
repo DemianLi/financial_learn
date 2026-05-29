@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>FinMath Map | 量化金融與籌碼力學學習地圖</title>
+  <meta name="description" content="一個將公司估值、消息判斷與籌碼分析系統化拆解為高中數學考綱科目（坐標系、向量幾何、線性代數與機率論）的互動式量化投資學習地圖。">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- KaTeX Math Typeface Rendering Support -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+</head>
+<body>
+
+  <!-- App Wrapper -->
+  <div class="app-container">
+    
+    <!-- Top Header Navigation -->
+    <header>
+      <div class="logo-section">
+        <h1 class="glow-text">📐 FinMath Map</h1>
+        <p>量化金融與籌碼力學學習地圖 — 投資學力指考系統</p>
+      </div>
+      
+      <div class="header-actions">
+        <button id="btnSandbox" class="btn" aria-label="打開代碼沙盒產生器">
+          ⚡ FinMind 沙盒代碼
+        </button>
+        <button id="btnMockExam" class="btn btn-primary" aria-label="進入量化學測模擬考">
+          📝 參加學力模擬考
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Grid Layout -->
+    <main class="dashboard-grid">
+      
+      <!-- LEFT SIDEBAR: Progress Dashboard & Node SVG Map -->
+      <section class="panel-left">
+        
+        <!-- Progress Tracker Dashboard Card -->
+        <article class="glass-card progress-card" id="progressCard">
+          <div class="progress-info">
+            <h3 class="progress-header">🎓 您的學習指考進度</h3>
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-secondary)">
+              <span>章節通關率</span>
+              <span id="progressPercentageText" style="font-weight:700; color:var(--subject-b);">0%</span>
+            </div>
+            
+            <div class="progress-bar-container">
+              <div id="progressBarFill" class="progress-bar-fill"></div>
+            </div>
+            
+            <div class="subject-scores">
+              <div class="score-row">
+                <span><span class="score-dot" style="background:var(--subject-a);"></span>科目 A: 基本面坐標</span>
+                <span id="scoreTextA" style="font-weight:600;">大綱解鎖中</span>
+              </div>
+              <div class="score-row">
+                <span><span class="score-dot" style="background:var(--subject-b);"></span>科目 B: 估值向量空間</span>
+                <span id="scoreTextB" style="font-weight:600;">大綱解鎖中</span>
+              </div>
+              <div class="score-row">
+                <span><span class="score-dot" style="background:var(--subject-c);"></span>科目 C: 籌碼線性代數</span>
+                <span id="scoreTextC" style="font-weight:600;">大綱解鎖中</span>
+              </div>
+              <div class="score-row">
+                <span><span class="score-dot" style="background:var(--subject-d);"></span>科目 D: 消息隨機機率</span>
+                <span id="scoreTextD" style="font-weight:600;">大綱解鎖中</span>
+              </div>
+              <div class="score-row">
+                <span><span class="score-dot" style="background:var(--subject-e);"></span>科目 E: 風險組合幾何</span>
+                <span id="scoreTextE" style="font-weight:600;">大綱解鎖中</span>
+              </div>
+              <div class="score-row">
+                <span><span class="score-dot" style="background:var(--subject-f);"></span>科目 F: 台股價值與情緒</span>
+                <span id="scoreTextF" style="font-weight:600;">大綱解鎖中</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Dynamic Canvas Polar Radar Chart -->
+          <div class="radar-container">
+            <canvas id="radarCanvas" aria-label="學習維度實力分佈雷達圖" role="img"></canvas>
+          </div>
+        </article>
+
+        <!-- SVG Map Card -->
+        <article class="glass-card map-card">
+          <div class="map-card-header">
+            <h3>🗺️ 課程核心章節節點</h3>
+            <span class="map-instructions">請點擊節點展開右側課程與代碼 ➔</span>
+          </div>
+          
+          <div class="syllabus-map-wrapper">
+            <!-- Interavtive SVG Nodes Graph -->
+            <svg id="syllabusSvgMap" class="syllabus-svg-map" viewBox="0 0 600 750" width="100%" height="100%">
+              <!-- Dynamic nodes and connectors injected here via app.js -->
+            </svg>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- RIGHT SIDEBAR: High Fidelity Content & Code & Exams (Slide-over Drawer) -->
+      <section class="panel-right">
+        
+        <article class="glass-card detail-card" id="detailCard">
+          
+          <!-- Content Details Panel (Visible on topic selection) -->
+          <div id="detailContent" class="detail-body" style="display: none;">
+            
+            <!-- Header Row -->
+            <div class="detail-header">
+              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <span class="detail-subject-badge">科目別</span>
+                <h2 class="detail-title">Topic Title</h2>
+              </div>
+              <button id="btnCloseDetail" class="modal-close" aria-label="關閉詳細資訊">&times;</button>
+            </div>
+            
+            <!-- Math Metaphor -->
+            <div class="analogy-section">
+              <h4>📐 數學比喻與直覺</h4>
+              <p class="analogy-text">Math Analogy Text goes here...</p>
+            </div>
+            
+            <!-- Formula Panel -->
+            <div class="formula-container">
+              <code>Formula here</code>
+            </div>
+            
+            <!-- Syllabus Highlights -->
+            <div class="objectives-section">
+              <h4>🎯 核心學習考點與大綱</h4>
+              <ul class="objectives-list">
+                <!-- Objectives Injected Here -->
+              </ul>
+            </div>
+            
+            <!-- Wall Street Skill Alignment -->
+            <div class="skill-align-card">
+              <div class="skill-align-header">
+                <span class="skill-align-title">WALL STREET Skill</span>
+                <span class="skill-align-badge">Claude FS-Plugin</span>
+              </div>
+              <p class="skill-align-desc">Skill description here...</p>
+            </div>
+
+            <!-- Code Lab Panel -->
+            <div class="code-section">
+              <div class="code-header-row">
+                <h4>💻 FinMind API 實戰程式碼 (Python)</h4>
+              </div>
+              <div class="code-wrapper">
+                <button class="btn-copy">Copy Code</button>
+                <pre><code class="language-python"># Injected code block</code></pre>
+              </div>
+            </div>
+            
+            <!-- Interactive Exam Panel -->
+            <div class="exam-section" id="examQuestionBox">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem;">
+                <h4>✍️ 本章學力指考模擬試題</h4>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                  <button id="btnSwitchQuestion" class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.72rem; border-radius: 4px; background: rgba(255,255,255,0.06); color: var(--text-primary); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s ease;">🔄 換一題</button>
+                  <span class="exam-badge">學測/指考題型</span>
+                </div>
+              </div>
+              <p class="exam-question">Question here...</p>
+              
+              <div class="exam-options-grid">
+                <!-- Interactive multiple choices here -->
+              </div>
+              
+              <div class="exam-explanation-box">
+                <div class="exam-explanation-title">💡 數學解題詳算步驟：</div>
+                <p class="exam-explanation-text">Explanation details...</p>
+              </div>
+            </div>
+
+          </div>
+        </article>
+
+      </section>
+
+    </main>
+
+    <!-- Footer Summary Section -->
+    <footer>
+      <span>Designed with Rich HSL Aesthetics for <strong>FinMath</strong> preparation.</span>
+      <span>利用 <a href="https://github.com/FinMind/FinMind" target="_blank" rel="noopener">FinMind API</a> 進行量化實戰 | 參考 <a href="https://morrishare.com/a-comprehensive-analysis-of-skills-in-financial-services-plugins/" target="_blank" rel="noopener">Claude FS 56 Skills</a></span>
+    </footer>
+
+  </div>
+
+  <!-- MODAL: FINMIND DATA SANDBOX & CODE GENERATOR -->
+  <div id="sandboxModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="sandboxModalTitle">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="sandboxModalTitle">⚡ FinMind API 量化數據沙盒產生器</h3>
+        <button id="btnCloseSandbox" class="modal-close" aria-label="關閉沙盒產生器">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="sandbox-card">
+          <p style="font-size:0.88rem; color:var(--text-secondary); margin-bottom:1rem;">
+            在此配置您的數據查詢參數，系統將動態生成標準、語法無誤且經過 pandas 清洗的 Python 實戰代碼，方便您複製於本機執行。
+          </p>
+          
+          <div class="sandbox-form-grid">
+            <div class="form-group">
+              <label for="sandboxStockId">股票代號</label>
+              <input type="text" id="sandboxStockId" class="form-input" value="2330" placeholder="e.g. 2330, 2454, 2303">
+            </div>
+            
+            <div class="form-group">
+              <label for="sandboxDataset">數據面向別</label>
+              <select id="sandboxDataset" class="form-select">
+                <option value="fundamental">科目 A: 財務報表 (綜合損益表)</option>
+                <option value="chips">科目 C: 三大法人 (淨買賣超)</option>
+                <option value="margin">科目 C: 信用交易 (融資融券力學)</option>
+                <option value="concentration">科目 C: 集保結構 (千張大戶張量)</option>
+                <option value="news">科目 D: 個股新聞 (情緒極性文本)</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="sandboxStartDate">歷史起點日期</label>
+              <input type="date" id="sandboxStartDate" class="form-input" value="2025-01-01">
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.5rem; margin-bottom:0.5rem;">
+            <h4 style="font-size:0.9rem;">生成的 Python 爬取代碼：</h4>
+            <button id="btnCopySandboxCode" class="btn" style="padding:0.4rem 0.8rem; font-size:0.75rem;">Copy Sandbox Code</button>
+          </div>
+          
+          <div class="code-wrapper" style="max-height: 250px; overflow-y: auto;">
+            <pre><code id="sandboxOutputCode" class="language-python"># Generating Code...</code></pre>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnGenerateCode" class="btn btn-primary" style="padding:0.5rem 1rem;">重新生成代碼</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MOCK EXAM CENTER -->
+  <div id="examModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="examModalTitle">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 id="examModalTitle">📝 金融指考/學測量化模擬試務中心</h3>
+        <button id="btnCloseExam" class="modal-close" aria-label="退出模擬考">&times;</button>
+      </div>
+      
+      <div class="modal-body" id="examContentBox">
+        <!-- Inside injected exam screen or score cards -->
+      </div>
+      
+      <div class="modal-footer">
+        <button id="btnPrevExam" class="btn" style="display: none;">◀ 上一題</button>
+        <button id="btnNextExam" class="btn" style="display: none;">下一題 ▶</button>
+        <button id="btnSubmitExam" class="btn btn-primary" style="display: none;">📤 送出成績單</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="syllabusData.js"></script>
+  <script src="app.js"></script>
+  
+  <!-- AI Analyst Sandbox Plugin (Experimental & Plug-and-Play) -->
+  <!-- Delete the line below to fully uninstall this feature and restore original product integrity -->
+  <script src="aiSandbox.js"></script>
+</body>
+</html>
