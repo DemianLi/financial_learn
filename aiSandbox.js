@@ -2,6 +2,16 @@
 
 (function() {
   document.addEventListener('DOMContentLoaded', () => {
+    // 0. 同步注入「關鍵隱藏樣式」：外部 aiSandbox.css 為非同步載入，
+    //    若先把 modal 加進 DOM，會在樣式套用前以無樣式狀態整頁閃現一下再消失。
+    //    這段同步 <style> 確保 modal 從第一次繪製起就是隱藏的。
+    if (!document.getElementById('aiSandboxCritical')) {
+      const criticalStyle = document.createElement('style');
+      criticalStyle.id = 'aiSandboxCritical';
+      criticalStyle.textContent = '.ai-modal-overlay{position:fixed;inset:0;opacity:0;pointer-events:none;}';
+      document.head.appendChild(criticalStyle);
+    }
+
     // 1. Proactively inject custom CSS stylesheet to maintain HTML integrity
     const styleLink = document.createElement('link');
     styleLink.rel = 'stylesheet';

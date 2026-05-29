@@ -1,0 +1,243 @@
+/* advancedMode.css - 進階圖譜樣式（機構研究員養成）
+   依賴 styles.css 既有的 CSS 變數與 .modal-overlay/.modal-box 基底。 */
+
+:root {
+  --adv-gold: hsl(48, 96%, 60%);
+  --adv-gold-soft: hsla(48, 96%, 60%, 0.12);
+}
+
+/* 進階解鎖按鈕 */
+#btnAdvanced {
+  position: relative;
+}
+#btnAdvanced.adv-unlocked {
+  border-color: var(--adv-gold);
+  color: var(--adv-gold);
+  background: var(--adv-gold-soft);
+  animation: advPulse 2.2s ease-in-out infinite;
+}
+@keyframes advPulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsla(48, 96%, 60%, 0.0); }
+  50% { box-shadow: 0 0 14px 2px hsla(48, 96%, 60%, 0.45); }
+}
+
+/* Modal box：放大以容納雙欄圖譜 */
+.adv-modal-box {
+  max-width: 1080px !important;
+  width: 94vw;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+}
+.adv-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* 進度條 */
+.adv-progress-strip {
+  padding: 0.8rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.adv-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.adv-progress-meta #advProgressText { color: var(--adv-gold); font-weight: 700; }
+.adv-progress-track {
+  height: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.adv-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--subject-a), var(--adv-gold));
+  border-radius: 99px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.adv-badge {
+  align-self: flex-start;
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--bg-primary);
+  background: var(--adv-gold);
+  padding: 0.25rem 0.7rem;
+  border-radius: 6px;
+}
+
+/* 主體雙欄 */
+.adv-body {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 !important;
+}
+.adv-graph-pane {
+  border-right: 1px solid var(--border-color);
+  background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.025), transparent 70%);
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+.adv-detail-pane {
+  overflow-y: auto;
+  padding: 1.4rem 1.6rem;
+}
+.adv-detail-empty {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 3rem;
+}
+
+/* SVG 圖譜 */
+.adv-link {
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+}
+.adv-link.done {
+  stroke: var(--adv-gold);
+  stroke-opacity: 0.6;
+  stroke-dasharray: none;
+}
+.adv-node { transition: transform 0.2s ease; }
+.adv-node:hover { transform: scale(1.06); transform-box: fill-box; transform-origin: center; }
+.adv-node-num { font-size: 10px; font-weight: 800; }
+.adv-node-label {
+  font-size: 9.5px;
+  fill: var(--text-secondary);
+  font-weight: 600;
+}
+.adv-node.active .adv-node-label { fill: var(--text-primary); }
+
+/* 詳細面板各區塊 */
+.adv-detail-head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1rem; }
+.adv-detail-head h2 { font-size: 1.15rem; margin: 0; line-height: 1.3; }
+.adv-detail-num {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--bg-primary);
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+}
+
+.adv-gap, .adv-skill, .adv-obj, .adv-code, .adv-checklist { margin-bottom: 1.3rem; }
+.adv-gap h4, .adv-obj h4 { font-size: 0.92rem; margin: 0 0 0.5rem; }
+.adv-gap {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+}
+.adv-gap h4 { color: #f87171; }
+.adv-gap p { font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary); margin: 0; }
+
+.adv-skill {
+  background: var(--adv-gold-soft);
+  border: 1px solid hsla(48, 96%, 60%, 0.3);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+}
+.adv-skill-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.4rem; }
+.adv-skill-title { font-size: 0.85rem; font-weight: 700; color: var(--adv-gold); }
+.adv-skill-plugin {
+  font-size: 0.68rem; font-weight: 700; color: var(--text-secondary);
+  border: 1px solid var(--border-color); border-radius: 4px; padding: 0.15rem 0.45rem;
+}
+.adv-skill p { font-size: 0.82rem; line-height: 1.55; color: var(--text-secondary); margin: 0; }
+
+.adv-obj ul { margin: 0; padding-left: 1.1rem; }
+.adv-obj li { font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary); margin-bottom: 0.35rem; }
+
+/* 程式碼 */
+.adv-code-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.adv-code-head h4 { font-size: 0.92rem; margin: 0; }
+.adv-copy {
+  font-size: 0.72rem; cursor: pointer;
+  background: rgba(255,255,255,0.06); color: var(--text-primary);
+  border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.6rem;
+  transition: all 0.2s ease;
+}
+.adv-copy:hover { border-color: var(--adv-gold); color: var(--adv-gold); }
+.adv-code pre {
+  background: #05070f;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  margin: 0;
+}
+.adv-code code {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  line-height: 1.55;
+  color: #cbd5e1;
+  white-space: pre;
+}
+
+/* 檢核清單 */
+.adv-checklist-head { display: flex; justify-content: space-between; align-items: center; }
+.adv-checklist-head h4 { font-size: 0.92rem; margin: 0; }
+.adv-checklist-count { font-size: 0.8rem; font-weight: 700; color: var(--adv-gold); }
+.adv-checklist-hint { font-size: 0.76rem; color: var(--text-muted); margin: 0.3rem 0 0.7rem; }
+.adv-checklist-items { display: flex; flex-direction: column; gap: 0.5rem; }
+.adv-check-item {
+  display: flex; align-items: flex-start; gap: 0.6rem; text-align: left;
+  width: 100%; cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 7px; padding: 0.65rem 0.8rem;
+  transition: all 0.18s ease;
+}
+.adv-check-item:hover { border-color: var(--border-hover); }
+.adv-check-item.checked {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.adv-check-box {
+  flex-shrink: 0; width: 18px; height: 18px; border-radius: 5px;
+  border: 1.5px solid var(--text-muted);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 800; color: var(--subject-a);
+  margin-top: 1px;
+}
+.adv-check-item.checked .adv-check-box { border-color: var(--subject-a); background: rgba(16,185,129,0.15); }
+.adv-check-text { font-size: 0.84rem; line-height: 1.5; color: var(--text-secondary); }
+.adv-check-item.checked .adv-check-text { color: var(--text-primary); }
+
+.adv-complete-banner {
+  margin-top: 0.9rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--subject-a);
+}
+.adv-complete-banner.pop { animation: advPopIn 0.4s ease; }
+@keyframes advPopIn {
+  0% { transform: scale(0.96); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* 響應式：窄螢幕改為上下堆疊 */
+@media (max-width: 760px) {
+  .adv-body { grid-template-columns: 1fr; grid-template-rows: 300px 1fr; }
+  .adv-graph-pane { border-right: none; border-bottom: 1px solid var(--border-color); }
+  .adv-modal-box { width: 96vw; max-height: 94vh; }
+}

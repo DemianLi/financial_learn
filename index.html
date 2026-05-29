@@ -8,6 +8,7 @@
   
   <!-- CSS Stylesheets -->
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="advancedMode.css">
   
   <!-- KaTeX Math Typeface Rendering Support -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
@@ -31,6 +32,9 @@
         </button>
         <button id="btnMockExam" class="btn btn-primary" aria-label="進入量化學測模擬考">
           📝 參加學力模擬考
+        </button>
+        <button id="btnAdvanced" class="btn" style="display:none;" aria-label="進入機構研究員進階圖譜">
+          🚀 進階模式
         </button>
       </div>
     </header>
@@ -78,6 +82,17 @@
               <div class="score-row">
                 <span><span class="score-dot" style="background:var(--subject-f);"></span>科目 F: 台股價值與情緒</span>
                 <span id="scoreTextF" style="font-weight:600;">大綱解鎖中</span>
+              </div>
+            </div>
+
+            <!-- 進階科目 G：機構研究實戰（完成 A–F 後解鎖才顯示） -->
+            <div id="advancedProgressRow" style="display:none; margin-top:0.7rem; padding-top:0.7rem; border-top:1px solid var(--border-color);">
+              <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-secondary)">
+                <span><span class="score-dot" style="background:hsl(48,96%,60%);"></span>科目 G: 機構研究實戰</span>
+                <span id="scoreTextG" style="font-weight:700; color:hsl(48,96%,60%);">0/10</span>
+              </div>
+              <div class="progress-bar-container" style="margin-top:0.45rem;">
+                <div id="advancedBarFill" class="progress-bar-fill" style="width:0%; background:linear-gradient(90deg, var(--subject-a), hsl(48,96%,60%));"></div>
               </div>
             </div>
           </div>
@@ -271,7 +286,11 @@
 
   <!-- Scripts -->
   <script src="syllabusData.js"></script>
+  <script src="advancedData.js"></script>
   <script src="app.js"></script>
+
+  <!-- 進階圖譜（機構研究員養成）：完成 A–F 後解鎖。刪除以下兩行即可完全移除此功能。 -->
+  <script src="advancedMode.js"></script>
   
   <!-- AI Analyst Sandbox Plugin (Experimental & Plug-and-Play) -->
   <!-- Delete the line below to fully uninstall this feature and restore original product integrity -->
