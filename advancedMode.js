@@ -55,6 +55,22 @@
     return advancedSyllabus.modules.filter(isModuleComplete).length;
   }
 
+  // 前置相依（與科目 A–F 一致：依圖譜連線循序解鎖）
+  const advPrereqs = (function () {
+    const map = {};
+    advancedSyllabus.connections.forEach(c => {
+      if (!map[c.to]) map[c.to] = [];
+      map[c.to].push(c.from);
+    });
+    return map;
+  })();
+
+  function isModuleLocked(id) {
+    const pre = advPrereqs[id];
+    if (!pre || !pre.length) return false;
+    return pre.some(pid => !isModuleComplete(moduleById(pid)));
+  }
+
   function isUnlocked() {
     try {
       const raw = store.get('finmath_completed_topics');
@@ -155,36 +171,39 @@
       g.setAttribute('class', 'adv-node');
       g.setAttribute('id', 'adv-node-' + m.id);
       const done = isModuleComplete(m);
+      const locked = isModuleLocked(m.id);
       const active = adv.activeId === m.id;
       if (done) g.classList.add('done');
+      if (locked) g.classList.add('locked');
       if (active) g.classList.add('active');
 
       const hit = document.createElementNS(SVGNS, 'circle');
       hit.setAttribute('cx', m.x); hit.setAttribute('cy', m.y);
       hit.setAttribute('r', 30); hit.setAttribute('fill', 'rgba(0,0,0,0)');
-      hit.setAttribute('cursor', 'pointer');
+      hit.setAttribute('cursor', locked ? 'not-allowed' : 'pointer');
       g.appendChild(hit);
 
       const ring = document.createElementNS(SVGNS, 'circle');
       ring.setAttribute('cx', m.x); ring.setAttribute('cy', m.y);
       ring.setAttribute('r', 22);
-      ring.setAttribute('fill', active ? accent : 'var(--bg-secondary)');
-      ring.setAttribute('stroke', done ? accent : (active ? accent : 'rgba(255,255,255,0.25)'));
+      ring.setAttribute('fill', (active && !locked) ? accent : 'var(--bg-secondary)');
+      ring.setAttribute('stroke', locked ? '#334155' : (done ? accent : (active ? accent : 'rgba(255,255,255,0.25)')));
       ring.setAttribute('stroke-width', '2.5');
       g.appendChild(ring);
 
       const icon = document.createElementNS(SVGNS, 'text');
       icon.setAttribute('x', m.x); icon.setAttribute('y', m.y + 5);
       icon.setAttribute('text-anchor', 'middle');
-      icon.setAttribute('font-size', '16px');
-      icon.textContent = m.icon;
+      icon.setAttribute('font-size', locked ? '14px' : '16px');
+      if (locked) icon.setAttribute('y', m.y + 4);
+      icon.textContent = locked ? '🔒' : m.icon;
       g.appendChild(icon);
 
       const num = document.createElementNS(SVGNS, 'text');
       num.setAttribute('x', m.x); num.setAttribute('y', m.y - 30);
       num.setAttribute('text-anchor', 'middle');
       num.setAttribute('class', 'adv-node-num');
-      num.setAttribute('fill', accent);
+      num.setAttribute('fill', locked ? '#475569' : accent);
       num.textContent = m.num;
       g.appendChild(num);
 
@@ -196,7 +215,7 @@
       label.textContent = short.length > 12 ? short.slice(0, 11) + '…' : short;
       g.appendChild(label);
 
-      if (done) {
+      if (done && !locked) {
         const chk = document.createElementNS(SVGNS, 'text');
         chk.setAttribute('x', m.x + 17); chk.setAttribute('y', m.y - 14);
         chk.setAttribute('text-anchor', 'middle');
@@ -205,7 +224,10 @@
         g.appendChild(chk);
       }
 
-      g.addEventListener('click', () => selectModule(m.id));
+      g.addEventListener('click', () => {
+        if (isModuleLocked(m.id)) showModuleLockWarning(m.id);
+        else selectModule(m.id);
+      });
       svg.appendChild(g);
     });
   }
@@ -214,9 +236,42 @@
   // DETAIL PANE
   // ===========================================================
   function selectModule(id) {
+    // 與 A–F 一致：鎖定的模組不可進入，改顯示前置需求
+    if (isModuleLocked(id)) { showModuleLockWarning(id); return; }
     adv.activeId = id;
     renderGraph();
     renderDetail();
+  }
+
+  // 點擊鎖定節點：顯示前置任務需求（對齊科目 A–F 的鎖定提示）
+  function showModuleLockWarning(id) {
+    const m = moduleById(id);
+    const pane = document.getElementById('advDetail');
+    if (!m || !pane) return;
+    adv.activeId = id;
+    renderGraph();
+
+    const pre = advPrereqs[id] || [];
+    pane.innerHTML = `
+      <div class="adv-detail-head">
+        <span class="adv-detail-num" style="background:var(--text-muted)">${esc(m.num)}</span>
+        <h2>🔒 ${esc(m.title)}</h2>
+      </div>
+      <div class="adv-lock">
+        <h4>🚫 此進階模組尚未解鎖</h4>
+        <p>本進階圖譜與科目 A–F 一致，採循序解鎖。請先完成下列前置模組，才能進入「${esc(m.title)}」：</p>
+        <div class="adv-lock-list">
+          ${pre.map(pid => {
+            const pm = moduleById(pid);
+            const isDone = isModuleComplete(pm);
+            return `<div class="adv-lock-row ${isDone ? 'done' : ''}">
+              <span>${esc(pm.num)}　${esc(pm.title.split('：')[0])}</span>
+              <span class="adv-lock-status">${isDone ? '✓ 已通關' : '✗ 尚未完成'}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
   }
 
   function renderDetail() {
@@ -326,14 +381,15 @@
   // ===========================================================
   function openModal() {
     const modal = ensureModal();
-    renderGraph();
     updateAdvProgress();
     if (!adv.activeId) {
-      // default to first incomplete module
-      const firstIncomplete = advancedSyllabus.modules.find(m => !isModuleComplete(m));
-      adv.activeId = (firstIncomplete || advancedSyllabus.modules[0]).id;
+      // 預設停在「可進入的下一關」：第一個未完成且未鎖定的模組
+      const frontier = advancedSyllabus.modules.find(m => !isModuleComplete(m) && !isModuleLocked(m.id));
+      adv.activeId = (frontier || advancedSyllabus.modules[0]).id;
     }
-    renderDetail();
+    renderGraph(); // 先定 activeId 再畫圖，確保當前節點正確高亮
+    if (isModuleLocked(adv.activeId)) showModuleLockWarning(adv.activeId);
+    else renderDetail();
     modal.classList.add('active');
     store.set('finmath_advanced_seen', '1');
   }
