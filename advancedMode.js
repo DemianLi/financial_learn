@@ -186,6 +186,7 @@
       const ring = document.createElementNS(SVGNS, 'circle');
       ring.setAttribute('cx', m.x); ring.setAttribute('cy', m.y);
       ring.setAttribute('r', 22);
+      ring.setAttribute('class', 'adv-node-ring');
       ring.setAttribute('fill', (active && !locked) ? accent : 'var(--bg-secondary)');
       ring.setAttribute('stroke', locked ? '#334155' : (done ? accent : (active ? accent : 'rgba(255,255,255,0.25)')));
       ring.setAttribute('stroke-width', '2.5');
