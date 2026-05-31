@@ -57,7 +57,11 @@
           <h3 id="aiModalTitle" class="ai-modal-title">🤖 台股 AI 多智能體分析師沙盒</h3>
           <button id="btnCloseAiSandbox" class="ai-modal-close" aria-label="關閉沙盒">&times;</button>
         </div>
-        
+
+        <div style="margin:0 1.5rem; padding:0.5rem 0.8rem; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:6px; font-size:0.72rem; color:#fcd34d; line-height:1.5;">
+          ⚠️ 本沙盒為教學模擬：WACC、無風險利率、ERP、基尼係數、稅率等數值為<strong>示例</strong>，非真實或即時資料；實務請以公開資訊觀測站、中央銀行、財政部等官方來源為準。
+        </div>
+
         <div class="ai-modal-body">
           <!-- LEFT COLUMN: Parameter Controls & Agent Topology SVG Map -->
           <div class="ai-col-left">

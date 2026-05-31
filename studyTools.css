@@ -1,0 +1,57 @@
+/* studyTools.css - P1 學習工具（錯題本 + 起點診斷）樣式，依賴 styles.css 既有變數與 .modal-* 基底 */
+
+.st-badge {
+  background: var(--subject-d);
+  color: var(--bg-primary);
+  font-size: 0.66rem;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 0.05rem 0.4rem;
+  margin-left: 0.25rem;
+}
+
+/* 錯題本卡片 */
+.st-mistake {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.8rem;
+}
+.st-mistake-head {
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem;
+}
+.st-count { font-size: 0.72rem; font-weight: 700; color: var(--subject-d); }
+.st-q { font-size: 0.84rem; line-height: 1.55; color: var(--text-secondary); margin: 0 0 0.6rem; }
+.st-ans { font-size: 0.82rem; border-radius: 6px; padding: 0.45rem 0.7rem; margin-bottom: 0.4rem; }
+.st-wrong { background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; }
+.st-right { background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; }
+.st-exp { margin-top: 0.3rem; }
+.st-exp summary { font-size: 0.8rem; cursor: pointer; color: var(--text-muted); }
+.st-exp p { font-size: 0.8rem; line-height: 1.55; color: var(--text-secondary); margin: 0.5rem 0 0; }
+
+/* 起點診斷 */
+.st-diag-q { margin-bottom: 1.2rem; }
+.st-diag-label { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.5rem; }
+.st-diag-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.st-opt {
+  text-align: left; cursor: pointer; font-size: 0.82rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 7px; padding: 0.6rem 0.7rem;
+  transition: all 0.18s ease;
+}
+.st-opt:hover { border-color: var(--border-hover); }
+.st-opt.sel { background: rgba(6, 182, 212, 0.12); border-color: var(--subject-b); color: var(--text-primary); font-weight: 600; }
+
+.st-plan { background: rgba(6, 182, 212, 0.05); border: 1px solid var(--subject-b); border-radius: 8px; padding: 1rem 1.1rem; }
+.st-plan-row { display: flex; gap: 0.8rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.84rem; }
+.st-plan-row:last-child { border-bottom: none; }
+.st-plan-row b { flex-shrink: 0; width: 5.5rem; color: var(--subject-b); }
+.st-plan-row span { color: var(--text-secondary); line-height: 1.5; }
+
+@media (max-width: 600px) {
+  .st-diag-opts { grid-template-columns: 1fr; }
+}

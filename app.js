@@ -36,6 +36,32 @@ document.addEventListener('DOMContentLoaded', () => {
     return simpleHash(sorted + SECURE_SALT);
   }
 
+  // 通用的「帶簽章驗證」陣列讀寫（給雙證據掌握度使用）
+  function loadVerifiedArray(valKey, sigKey) {
+    try {
+      const val = safeStorage.getItem(valKey);
+      const sig = safeStorage.getItem(sigKey);
+      if (val) {
+        const parsed = JSON.parse(val);
+        if (calculateProgressChecksum(parsed) === sig) return parsed;
+      }
+    } catch (e) { /* ignore */ }
+    return null;
+  }
+  function saveVerifiedArray(valKey, sigKey, arr) {
+    safeStorage.setItem(valKey, JSON.stringify(arr));
+    safeStorage.setItem(sigKey, calculateProgressChecksum(arr));
+  }
+
+  // 派發錯題事件（由 studyTools.js 的錯題本接收；未載入時無副作用）
+  function dispatchMistake(topicId, qIndex, chosenIdx) {
+    try {
+      document.dispatchEvent(new CustomEvent('finmath-mistake', {
+        detail: { topicId, qIndex, chosenIdx }
+      }));
+    } catch (e) { /* ignore */ }
+  }
+
   // --- CURRICULUM DEPENDENCIES MAP ---
   const prerequisites = {
     'a2': ['a1'],
@@ -100,6 +126,41 @@ document.addEventListener('DOMContentLoaded', () => {
       score: 0
     },
     topicQuestionIndices: {}
+  };
+
+  // 雙證據掌握度（P0 校正）：通關需同時 ① 測驗答對 ② 完成微產出。
+  // 既有使用者（已通關章節）自動補種兩種證據，避免進度被重置。
+  state.examPassed = loadVerifiedArray('finmath_exam_passed', 'finmath_exam_sig') || [...state.completedTopics];
+  state.deliverableDone = loadVerifiedArray('finmath_deliverable_done', 'finmath_deliverable_sig') || [...state.completedTopics];
+
+  // 每章微產出任務（對齊 learn-anything-skill 的專案驅動：每輪都要有產出）
+  const MICRO_DELIVERABLES = {
+    a1: { task: '用 FinMind 抓台積電(2330)財報，算出最近一期「負債比率」與「流動比率」。', output: '兩個數值 + 一句健康度解讀' },
+    a2: { task: '用 FinMind 拆解一檔台股的 ROE 三因子（淨利率 × 資產週轉率 × 權益乘數）。', output: '三因子數值 + 判斷成長由毛利或槓桿驅動' },
+    a3: { task: '抓一檔現金流量表，計算近四季自由現金流（營業現金流 − 資本支出）。', output: 'FCF 四季數列 + 趨勢一句話' },
+    b1: { task: '取三檔同業的 P/E 或 P/B，做一張可比表。', output: '3 檔比較表 + 一句相對高估/低估判斷' },
+    b2: { task: '用台灣公債殖利率設無風險利率，算一檔股票的 WACC 與一個 DCF 估值，並做 WACC±1% 敏感度。', output: 'EV 數值 + 敏感度三點' },
+    b3: { task: '把一檔股票放進「成長 vs 估值」二維座標，標出相對同業的位置。', output: '座標位置描述 + 一句結論' },
+    c1: { task: '抓一檔近 20 日三大法人買賣超，算淨買超合計。', output: '淨買超數列 + 主力方向判斷' },
+    c2: { task: '抓融資融券餘額，算「券資比」近期變化。', output: '券資比趨勢 + 一句多空解讀' },
+    c3: { task: '抓集保大戶持股，算千張大戶持股比近期變化。', output: '大戶持股比變化 + 一句籌碼解讀' },
+    d1: { task: '抓一檔近一週新聞標題，人工標記正/負面並算情緒比例。', output: '情緒比例 + 一句輿情判斷' },
+    d2: { task: '給定一個先驗看法，用一則新事件（法說/財報）做一次貝氏更新。', output: '先驗 → 後驗的更新說明' },
+    d3: { task: '列出一檔股票未來一季的潛在催化劑事件並標時間。', output: '至少 3 個催化劑 + 時間' },
+    e1: { task: '用報酬率資料估一檔股票對大盤的 Beta，並用 CAPM 算預期報酬。', output: 'Beta 值 + 預期報酬' },
+    e2: { task: '算一個簡單投組的年化報酬、波動與 Sharpe Ratio。', output: '三個數值 + 一句評價' },
+    e3: { task: '算一檔（或投組）的歷史最大回撤（MDD）與一個簡單 VaR。', output: 'MDD + VaR 數值' },
+    f1: { task: '抓月營收算 YoY 與 MoM，判斷營收動能是否轉強。', output: 'YoY/MoM 數值 + 動能判斷' },
+    f2: { task: '結合營收與一則法說訊號，更新對下一季的機率看法。', output: '更新後的機率判斷說明' },
+    f3: { task: '結合融資餘額與大戶持股，判斷籌碼結構是否健康。', output: '一句籌碼健康度結論 + 依據' }
+  };
+
+  // P2：多能力點章節的「能力點拆解」（對齊 Mastery Learning：一次只推進一個能力點）
+  // 不改節點結構，只在詳情頁提示分階段學習。
+  const CHAPTER_SUBSKILLS = {
+    b2: ['① 估算折現率 WACC（無風險利率 + 風險溢酬）', '② 預測自由現金流並計算終值（Terminal Value）', '③ 折現加總後做 WACC × g 敏感度分析'],
+    d2: ['① 設定先驗機率（你原本的看法）', '② 評估新事件的似然（法說／財報訊號）', '③ 用貝氏公式更新為後驗機率'],
+    e3: ['① 計算歷史最大回撤（MDD）', '② 計算風險值 VaR（如 95% 歷史模擬）']
   };
 
   // DOM Elements Cache
@@ -422,6 +483,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Hide sensitivity panel if active
     const sensitivityPanel = document.getElementById('dcfSensitivityPanel');
     if (sensitivityPanel) sensitivityPanel.style.display = 'none';
+
+    // 鎖定時隱藏掌握度面板
+    const masteryPanel = document.getElementById('masteryPanel');
+    if (masteryPanel) masteryPanel.style.display = 'none';
+
+    // 鎖定時隱藏能力點拆解面板
+    const subskillPanel = document.getElementById('subskillPanel');
+    if (subskillPanel) subskillPanel.style.display = 'none';
   }
 
   // --- TOPIC SELECTION CONTROLLER ---
@@ -525,8 +594,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (sensitivityPanel) sensitivityPanel.style.display = 'none';
     }
 
+    // P2：能力點拆解（多能力點章節）
+    renderSubskillPanel(topic);
+
     // Setup Interactive Mock Exam Problem
     renderExamQuestion(topic);
+
+    // 雙證據掌握度面板（微產出 + 通關狀態）
+    renderMasteryPanel(topic);
   }
 
   // --- SENSITIVITY CALCULATION & GRID (B2) ---
@@ -718,26 +793,30 @@ document.addEventListener('DOMContentLoaded', () => {
           btn.classList.add('correct');
           explanationBox.style.display = 'block';
           explanationBox.style.borderTopColor = 'var(--subject-a)';
-          
-          // Mark topic as completed
-          markTopicCompleted(topic.id);
+
+          // 證據一：測驗答對（通關仍需完成微產出）
+          recordExamPassed(topic.id);
+          renderMasteryPanel(topic);
         } else {
           btn.classList.add('wrong');
-          
+
+          // 記錄錯題（供錯題本使用）
+          dispatchMistake(topic.id, qIndex, idx);
+
           // Reveal correct button
           q.options.forEach((_, oIdx) => {
             if (simpleHash(topic.id + "-" + qIndex + "-" + oIdx) === q.answerHash) {
               optionButtons[oIdx].classList.add('correct');
             }
           });
-          
+
           explanationBox.style.display = 'block';
           explanationBox.style.borderTopColor = '#ef4444';
         }
       };
 
-      // Check if topic is already completed - pre-reveal answer and disable buttons
-      if (state.completedTopics.includes(topic.id)) {
+      // 若該章測驗已答對過，預先揭示答案並鎖定（通關仍需微產出）
+      if (state.examPassed.includes(topic.id)) {
         if (isCorrect) {
           btn.classList.add('correct');
           explanationBox.style.display = 'block';
@@ -750,16 +829,113 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- PROGRESS STATE TRACKING ---
-  function markTopicCompleted(topicId) {
-    if (!state.completedTopics.includes(topicId)) {
-      state.completedTopics.push(topicId);
-      // Write both list and encrypted checksum to localStorage
-      safeStorage.setItem('finmath_completed_topics', JSON.stringify(state.completedTopics));
-      safeStorage.setItem('finmath_completed_checksum', calculateProgressChecksum(state.completedTopics));
-      
-      updateProgressUI();
-      renderRadarChart();
-      renderSvgMap();
+  // 證據一：測驗答對
+  function recordExamPassed(topicId) {
+    if (!state.examPassed.includes(topicId)) {
+      state.examPassed.push(topicId);
+      saveVerifiedArray('finmath_exam_passed', 'finmath_exam_sig', state.examPassed);
+    }
+    finalizeCompletion();
+  }
+
+  // 證據二：完成微產出
+  function recordDeliverableDone(topicId) {
+    if (!state.deliverableDone.includes(topicId)) {
+      state.deliverableDone.push(topicId);
+      saveVerifiedArray('finmath_deliverable_done', 'finmath_deliverable_sig', state.deliverableDone);
+    }
+    finalizeCompletion();
+  }
+
+  // 通關 = 兩種證據齊備（重新推導 completedTopics，並刷新 UI）
+  function finalizeCompletion() {
+    state.completedTopics = syllabusData.topics
+      .filter(t => state.examPassed.includes(t.id) && state.deliverableDone.includes(t.id))
+      .map(t => t.id);
+    safeStorage.setItem('finmath_completed_topics', JSON.stringify(state.completedTopics));
+    safeStorage.setItem('finmath_completed_checksum', calculateProgressChecksum(state.completedTopics));
+
+    updateProgressUI();
+    renderRadarChart();
+    renderSvgMap();
+  }
+
+  // P2：能力點拆解面板（僅多能力點章節顯示）
+  function renderSubskillPanel(topic) {
+    let panel = document.getElementById('subskillPanel');
+    const steps = CHAPTER_SUBSKILLS[topic.id];
+    if (!steps) { if (panel) panel.style.display = 'none'; return; }
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'subskillPanel';
+      const obj = elements.detailContent.querySelector('.objectives-section');
+      obj.parentNode.insertBefore(panel, obj.nextSibling);
+    }
+    panel.style.display = 'block';
+    panel.innerHTML = `
+      <div style="background:rgba(139,92,246,0.06); border:1px solid var(--subject-c); border-radius:8px; padding:0.9rem 1rem; margin:0.8rem 0;">
+        <h4 style="color:var(--subject-c); margin-top:0; font-size:0.92rem;">🧩 本章能力點拆解（建議分階段）</h4>
+        <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.5; margin:0 0 0.6rem;">
+          本章包含多個能力點。依 Mastery Learning「一次只推進一個能力點」，建議照下列順序分階段完成，不要一次硬塞：
+        </p>
+        <ol style="margin:0; padding-left:1.2rem; font-size:0.84rem; line-height:1.7; color:var(--text-primary);">
+          ${steps.map(s => `<li>${s}</li>`).join('')}
+        </ol>
+      </div>`;
+  }
+
+  // 雙證據掌握度面板：顯示微產出任務 + 兩種證據狀態
+  function renderMasteryPanel(topic) {
+    let panel = document.getElementById('masteryPanel');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'masteryPanel';
+      const examSection = elements.detailContent.querySelector('.exam-section');
+      examSection.parentNode.insertBefore(panel, examSection);
+    }
+    panel.style.display = 'block';
+
+    const md = MICRO_DELIVERABLES[topic.id] || { task: '完成一個與本章相關的小產出。', output: '一段可檢視的結果' };
+    const examOK = state.examPassed.includes(topic.id);
+    const delivOK = state.deliverableDone.includes(topic.id);
+    const done = examOK && delivOK;
+
+    panel.innerHTML = `
+      <div style="background:rgba(168,138,21,0.06); border:1px solid hsl(48,96%,60%); border-radius:8px; padding:1.1rem; margin:1.2rem 0;">
+        <h4 style="color:hsl(48,96%,60%); margin-top:0; display:flex; justify-content:space-between; align-items:center;">
+          <span>🎓 通關需要兩種證據（Mastery）</span>
+          <span style="font-size:0.7rem; background:hsl(48,96%,60%); color:var(--bg-primary); padding:0.15rem 0.5rem; border-radius:4px; font-weight:700;">不只是看懂</span>
+        </h4>
+        <p style="font-size:0.82rem; color:var(--text-secondary); line-height:1.55; margin:0 0 0.9rem;">
+          單選題只能證明「知道」。本章要算通關，需同時完成下列兩項：
+        </p>
+        <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.02); border:1px solid ${examOK ? 'rgba(16,185,129,0.4)' : 'var(--border-color)'}; border-radius:6px; padding:0.55rem 0.8rem; font-size:0.84rem;">
+            <span>① 測驗答對</span>
+            <span style="font-weight:700; color:${examOK ? 'var(--subject-a)' : '#f87171'}">${examOK ? '✓ 已完成' : '✗ 尚未完成'}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.02); border:1px solid ${delivOK ? 'rgba(16,185,129,0.4)' : 'var(--border-color)'}; border-radius:6px; padding:0.55rem 0.8rem; font-size:0.84rem;">
+            <span>② 完成微產出</span>
+            <span style="font-weight:700; color:${delivOK ? 'var(--subject-a)' : '#f87171'}">${delivOK ? '✓ 已完成' : '✗ 尚未完成'}</span>
+          </div>
+        </div>
+
+        <div style="background:rgba(0,0,0,0.18); border-radius:6px; padding:0.8rem;">
+          <div style="font-size:0.82rem; font-weight:700; margin-bottom:0.3rem;">💻 本章微產出任務</div>
+          <p style="font-size:0.82rem; color:var(--text-secondary); line-height:1.55; margin:0 0 0.4rem;">${md.task}</p>
+          <p style="font-size:0.76rem; color:var(--text-muted); margin:0 0 0.7rem;">預期產出：${md.output}</p>
+          <button id="btnDeliverableDone" class="btn" style="width:100%; ${delivOK ? 'opacity:0.6;' : ''}" ${delivOK ? 'disabled' : ''}>
+            ${delivOK ? '✓ 已標記完成微產出' : '我已完成此微產出（標記為產出證據）'}
+          </button>
+        </div>
+
+        ${done ? '<div style="margin-top:0.8rem; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.4); border-radius:6px; padding:0.6rem 0.8rem; font-size:0.84rem; font-weight:600; color:var(--subject-a);">🎉 本章已通關（兩種證據齊備）。</div>' : ''}
+      </div>
+    `;
+
+    const btn = panel.querySelector('#btnDeliverableDone');
+    if (btn && !delivOK) {
+      btn.onclick = () => { recordDeliverableDone(topic.id); renderMasteryPanel(topic); };
     }
   }
 
@@ -1023,6 +1199,8 @@ document.addEventListener('DOMContentLoaded', () => {
           btn.classList.add('correct');
         } else {
           btn.classList.add('wrong');
+          // 記錄錯題（模擬考）
+          dispatchMistake(mockQ.id, mockQ.qIndex, oIdx);
           // Highlight correct one
           q.options.forEach((_, correctOptIdx) => {
             if (simpleHash(mockQ.id + "-" + mockQ.qIndex + "-" + correctOptIdx) === q.answerHash) {
@@ -1099,7 +1277,8 @@ document.addEventListener('DOMContentLoaded', () => {
     state.mockExam.questions.forEach((q, i) => {
       const selectedIdx = state.mockExam.answers[i];
       if (selectedIdx !== undefined && (simpleHash(q.id + "-" + q.qIndex + "-" + selectedIdx) === q.examQuestion.answerHash)) {
-        markTopicCompleted(q.id);
+        // 模擬考只給「測驗答對」這一種證據；通關仍需在章節內完成微產出
+        recordExamPassed(q.id);
       }
     });
   }
