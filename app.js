@@ -1,46 +1,18 @@
 // app.js - FinMath Map Application Controller (Security & Professional Quant Upgraded)
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Safe LocalStorage Helper
-  const safeStorage = {
-    getItem(key) {
-      try {
-        return localStorage.getItem(key);
-      } catch (e) {
-        console.warn("Storage blocked or unavailable:", e);
-        return null;
-      }
-    },
-    setItem(key, value) {
-      try {
-        localStorage.setItem(key, value);
-      } catch (e) {
-        console.warn("Failed to write to storage:", e);
-      }
-    }
-  };
-
   // --- CRYPTO SECURITY HELPER ---
-  // A clean, robust, and synchronous hash function for anti-cheating and integrity validation
-  function simpleHash(str) {
-    let hash = 5381;
-    for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) + hash) + str.charCodeAt(i);
-    }
-    return Math.abs(hash & 0xFFFFFFFF).toString(36);
-  }
-
   const SECURE_SALT = "FinMathSecureSalt2026";
   function calculateProgressChecksum(completedArray) {
     const sorted = [...completedArray].sort().join(',');
-    return simpleHash(sorted + SECURE_SALT);
+    return AnswerVerifier.simpleHash(sorted + SECURE_SALT);
   }
 
   // 通用的「帶簽章驗證」陣列讀寫（給雙證據掌握度使用）
   function loadVerifiedArray(valKey, sigKey) {
     try {
-      const val = safeStorage.getItem(valKey);
-      const sig = safeStorage.getItem(sigKey);
+      const val = FinStorage.safeGet(valKey);
+      const sig = FinStorage.safeGet(sigKey);
       if (val) {
         const parsed = JSON.parse(val);
         if (calculateProgressChecksum(parsed) === sig) return parsed;
@@ -49,8 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
   function saveVerifiedArray(valKey, sigKey, arr) {
-    safeStorage.setItem(valKey, JSON.stringify(arr));
-    safeStorage.setItem(sigKey, calculateProgressChecksum(arr));
+    FinStorage.safeSet(valKey, JSON.stringify(arr));
+    FinStorage.safeSet(sigKey, calculateProgressChecksum(arr));
   }
 
   // 派發錯題事件（由 studyTools.js 的錯題本接收；未載入時無副作用）
@@ -99,8 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
     activeTopic: null,
     completedTopics: (() => {
       try {
-        const val = safeStorage.getItem('finmath_completed_topics');
-        const checksum = safeStorage.getItem('finmath_completed_checksum');
+        const val = FinStorage.safeGet(FinStorage.KEYS.COMPLETED_TOPICS);
+        const checksum = FinStorage.safeGet(FinStorage.KEYS.COMPLETED_CHECKSUM);
         if (val) {
           const parsed = JSON.parse(val);
           // Verify hash signature to block F12 Console hacks
@@ -108,8 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return parsed;
           } else {
             console.warn("⚠️ 偵測到 LocalStorage 數據篡改！學術誠實防護系統已重置您的學習進度！");
-            safeStorage.setItem('finmath_completed_topics', JSON.stringify([]));
-            safeStorage.setItem('finmath_completed_checksum', calculateProgressChecksum([]));
+            FinStorage.safeSet(FinStorage.KEYS.COMPLETED_TOPICS, JSON.stringify([]));
+            FinStorage.safeSet(FinStorage.KEYS.COMPLETED_CHECKSUM, calculateProgressChecksum([]));
             return [];
           }
         }
@@ -130,8 +102,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 雙證據掌握度（P0 校正）：通關需同時 ① 測驗答對 ② 完成微產出。
   // 既有使用者（已通關章節）自動補種兩種證據，避免進度被重置。
-  state.examPassed = loadVerifiedArray('finmath_exam_passed', 'finmath_exam_sig') || [...state.completedTopics];
-  state.deliverableDone = loadVerifiedArray('finmath_deliverable_done', 'finmath_deliverable_sig') || [...state.completedTopics];
+  state.examPassed = loadVerifiedArray(FinStorage.KEYS.EXAM_PASSED, FinStorage.KEYS.EXAM_SIG) || [...state.completedTopics];
+  state.deliverableDone = loadVerifiedArray(FinStorage.KEYS.DELIVERABLE_DONE, FinStorage.KEYS.DELIVERABLE_SIG) || [...state.completedTopics];
 
   // 每章微產出任務（對齊 learn-anything-skill 的專案驅動：每輪都要有產出）
   const MICRO_DELIVERABLES = {
@@ -512,80 +484,36 @@ document.addEventListener('DOMContentLoaded', () => {
     populateDetailDrawer(topicData);
   }
 
-  function populateDetailDrawer(topic) {
-    if (elements.detailEmpty) elements.detailEmpty.style.display = 'none';
-    elements.detailContent.style.display = 'flex';
-    if (elements.panelRight) elements.panelRight.classList.add('active');
+  // --- DETAIL DRAWER: focused per-panel renderers ---
 
-    // Restore visibility of panels
-    elements.detailContent.querySelector('.formula-container').style.display = 'block';
-    elements.detailContent.querySelector('.objectives-section').style.display = 'block';
-    elements.detailContent.querySelector('.skill-align-card').style.display = 'block';
-    elements.detailContent.querySelector('.code-section').style.display = 'block';
-    elements.detailContent.querySelector('.exam-section').style.display = 'block';
-    
+  function renderDrawerMeta(topic) {
     const subjectInfo = syllabusData.subjects[topic.subject];
-    
-    // Set colors & Badges
     const badge = elements.detailContent.querySelector('.detail-subject-badge');
     badge.style.backgroundColor = subjectInfo.color;
     badge.textContent = subjectInfo.title;
-    
     elements.detailContent.querySelector('.detail-title').textContent = topic.title;
-    
-    // Render Math Analogy using formatMathText (KaTeX)
     elements.detailContent.querySelector('.analogy-text').innerHTML = formatMathText(topic.mathAnalogy);
-    
-    // Render Key Formula using KaTeX block mode
+  }
+
+  function renderFormulaPanel(topic) {
     const formulaContainer = elements.detailContent.querySelector('.formula-container');
     if (window.katex) {
       try {
-        window.katex.render(topic.keyFormula, formulaContainer, {
-          displayMode: true,
-          throwOnError: false
-        });
+        window.katex.render(topic.keyFormula, formulaContainer, { displayMode: true, throwOnError: false });
       } catch (e) {
-        console.error("KaTeX keyFormula rendering error:", e);
         formulaContainer.innerHTML = `<code>${topic.keyFormula}</code>`;
       }
     } else {
       formulaContainer.innerHTML = `<code>${topic.keyFormula}</code>`;
     }
-    
-    // Draw Objectives
-    const objList = elements.detailContent.querySelector('.objectives-list');
-    objList.innerHTML = '';
-    topic.learningObjectives.forEach(obj => {
-      const li = document.createElement('li');
-      li.textContent = obj;
-      objList.appendChild(li);
-    });
 
-    // Wall Street Alignment
-    elements.detailContent.querySelector('.skill-align-title').textContent = `WALL STREET Skill: ${topic.wallStreetSkill.name}`;
-    elements.detailContent.querySelector('.skill-align-desc').textContent = topic.wallStreetSkill.description;
-
-    // FinMind Python Code Block
-    const codePre = elements.detailContent.querySelector('.code-wrapper pre code');
-    codePre.textContent = topic.finmindCode;
-    
-    // Add dynamic copying
-    const btnCopy = elements.detailContent.querySelector('.btn-copy');
-    btnCopy.onclick = () => {
-      navigator.clipboard.writeText(topic.finmindCode);
-      btnCopy.textContent = 'Copied!';
-      setTimeout(() => btnCopy.textContent = 'Copy Code', 2000);
-    };
-
-    // --- INTERACTIVE DCF SENSITIVITY MODULE (B2) ---
+    // DCF Sensitivity 面板只在 B2 顯示
     let sensitivityPanel = document.getElementById('dcfSensitivityPanel');
     if (topic.id === 'b2') {
       if (!sensitivityPanel) {
         sensitivityPanel = document.createElement('div');
         sensitivityPanel.id = 'dcfSensitivityPanel';
         sensitivityPanel.className = 'sensitivity-container';
-        // Injected right after formula container
-        const formulaContainer = elements.detailContent.querySelector('.formula-container');
         formulaContainer.parentNode.insertBefore(sensitivityPanel, formulaContainer.nextSibling);
       }
       sensitivityPanel.style.display = 'block';
@@ -593,14 +521,52 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       if (sensitivityPanel) sensitivityPanel.style.display = 'none';
     }
+  }
 
-    // P2：能力點拆解（多能力點章節）
+  function renderObjectivesPanel(topic) {
+    const objList = elements.detailContent.querySelector('.objectives-list');
+    objList.innerHTML = '';
+    topic.learningObjectives.forEach(obj => {
+      const li = document.createElement('li');
+      li.textContent = obj;
+      objList.appendChild(li);
+    });
+  }
+
+  function renderSkillAlignPanel(topic) {
+    elements.detailContent.querySelector('.skill-align-title').textContent = `WALL STREET Skill: ${topic.wallStreetSkill.name}`;
+    elements.detailContent.querySelector('.skill-align-desc').textContent = topic.wallStreetSkill.description;
+  }
+
+  function renderCodePanel(topic) {
+    const codePre = elements.detailContent.querySelector('.code-wrapper pre code');
+    codePre.textContent = topic.finmindCode;
+    const btnCopy = elements.detailContent.querySelector('.btn-copy');
+    btnCopy.onclick = () => {
+      navigator.clipboard.writeText(topic.finmindCode);
+      btnCopy.textContent = 'Copied!';
+      setTimeout(() => btnCopy.textContent = 'Copy Code', 2000);
+    };
+  }
+
+  // coordinator：恢復面板可見性後依序呼叫各 renderer
+  function populateDetailDrawer(topic) {
+    if (elements.detailEmpty) elements.detailEmpty.style.display = 'none';
+    elements.detailContent.style.display = 'flex';
+    if (elements.panelRight) elements.panelRight.classList.add('active');
+
+    ['.formula-container', '.objectives-section', '.skill-align-card', '.code-section', '.exam-section'].forEach(sel => {
+      const el = elements.detailContent.querySelector(sel);
+      if (el) el.style.display = 'block';
+    });
+
+    renderDrawerMeta(topic);
+    renderFormulaPanel(topic);
+    renderObjectivesPanel(topic);
+    renderSkillAlignPanel(topic);
+    renderCodePanel(topic);
     renderSubskillPanel(topic);
-
-    // Setup Interactive Mock Exam Problem
     renderExamQuestion(topic);
-
-    // 雙證據掌握度面板（微產出 + 通關狀態）
     renderMasteryPanel(topic);
   }
 
@@ -781,8 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="exam-option-text">${formatMathText(opt)}</span>
       `;
       
-      const optionHash = simpleHash(topic.id + "-" + qIndex + "-" + idx);
-      const isCorrect = optionHash === q.answerHash;
+      const isCorrect = AnswerVerifier.isCorrect(topic.id, qIndex, idx, q.answerHash);
 
       // Select handler
       btn.onclick = () => {
@@ -805,7 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Reveal correct button
           q.options.forEach((_, oIdx) => {
-            if (simpleHash(topic.id + "-" + qIndex + "-" + oIdx) === q.answerHash) {
+            if (AnswerVerifier.isCorrect(topic.id, qIndex, oIdx, q.answerHash)) {
               optionButtons[oIdx].classList.add('correct');
             }
           });
@@ -833,7 +798,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function recordExamPassed(topicId) {
     if (!state.examPassed.includes(topicId)) {
       state.examPassed.push(topicId);
-      saveVerifiedArray('finmath_exam_passed', 'finmath_exam_sig', state.examPassed);
+      saveVerifiedArray(FinStorage.KEYS.EXAM_PASSED, FinStorage.KEYS.EXAM_SIG, state.examPassed);
     }
     finalizeCompletion();
   }
@@ -842,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function recordDeliverableDone(topicId) {
     if (!state.deliverableDone.includes(topicId)) {
       state.deliverableDone.push(topicId);
-      saveVerifiedArray('finmath_deliverable_done', 'finmath_deliverable_sig', state.deliverableDone);
+      saveVerifiedArray(FinStorage.KEYS.DELIVERABLE_DONE, FinStorage.KEYS.DELIVERABLE_SIG, state.deliverableDone);
     }
     finalizeCompletion();
   }
@@ -852,8 +817,8 @@ document.addEventListener('DOMContentLoaded', () => {
     state.completedTopics = syllabusData.topics
       .filter(t => state.examPassed.includes(t.id) && state.deliverableDone.includes(t.id))
       .map(t => t.id);
-    safeStorage.setItem('finmath_completed_topics', JSON.stringify(state.completedTopics));
-    safeStorage.setItem('finmath_completed_checksum', calculateProgressChecksum(state.completedTopics));
+    FinStorage.safeSet(FinStorage.KEYS.COMPLETED_TOPICS, JSON.stringify(state.completedTopics));
+    FinStorage.safeSet(FinStorage.KEYS.COMPLETED_CHECKSUM, calculateProgressChecksum(state.completedTopics));
 
     updateProgressUI();
     renderRadarChart();
@@ -1174,8 +1139,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const btn = document.createElement('button');
       btn.className = 'exam-option-btn';
       
-      const optionHash = simpleHash(mockQ.id + "-" + mockQ.qIndex + "-" + oIdx);
-      const isCorrect = optionHash === q.answerHash;
+      const isCorrect = AnswerVerifier.isCorrect(mockQ.id, mockQ.qIndex, oIdx, q.answerHash);
 
       const previouslyAnswered = state.mockExam.answers[idx];
       if (previouslyAnswered !== undefined) {
@@ -1203,7 +1167,7 @@ document.addEventListener('DOMContentLoaded', () => {
           dispatchMistake(mockQ.id, mockQ.qIndex, oIdx);
           // Highlight correct one
           q.options.forEach((_, correctOptIdx) => {
-            if (simpleHash(mockQ.id + "-" + mockQ.qIndex + "-" + correctOptIdx) === q.answerHash) {
+            if (AnswerVerifier.isCorrect(mockQ.id, mockQ.qIndex, correctOptIdx, q.answerHash)) {
               optionsGrid.querySelectorAll('.exam-option-btn')[correctOptIdx].classList.add('correct');
             }
           });
@@ -1260,7 +1224,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="display:flex; flex-direction:column; gap:0.6rem;">
             ${state.mockExam.questions.map((q, i) => {
               const selectedIdx = state.mockExam.answers[i];
-              const isCorrect = selectedIdx !== undefined && (simpleHash(q.id + "-" + q.qIndex + "-" + selectedIdx) === q.examQuestion.answerHash);
+              const isCorrect = selectedIdx !== undefined && AnswerVerifier.isCorrect(q.id, q.qIndex, selectedIdx, q.examQuestion.answerHash);
               return `
                 <div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.02); padding:0.8rem; border-radius:6px; border:1px solid ${isCorrect ? 'var(--subject-a)' : 'rgba(239, 68, 68, 0.4)'}">
                   <span style="font-size:0.85rem; font-weight:500;">${i+1}. ${q.title}</span>
@@ -1276,7 +1240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Automatically complete corresponding mock-exam challenges
     state.mockExam.questions.forEach((q, i) => {
       const selectedIdx = state.mockExam.answers[i];
-      if (selectedIdx !== undefined && (simpleHash(q.id + "-" + q.qIndex + "-" + selectedIdx) === q.examQuestion.answerHash)) {
+      if (selectedIdx !== undefined && AnswerVerifier.isCorrect(q.id, q.qIndex, selectedIdx, q.examQuestion.answerHash)) {
         // 模擬考只給「測驗答對」這一種證據；通關仍需在章節內完成微產出
         recordExamPassed(q.id);
       }

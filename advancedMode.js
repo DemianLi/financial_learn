@@ -8,26 +8,20 @@
   const SVGNS = 'http://www.w3.org/2000/svg';
   const SALT = 'FinMathAdvancedSalt2026';
 
-  // --- Storage helpers (safe) ---
   const store = {
-    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-    set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } }
+    get: FinStorage.safeGet,
+    set: FinStorage.safeSet
   };
 
-  function simpleHash(str) {
-    let h = 5381;
-    for (let i = 0; i < str.length; i++) h = ((h << 5) + h) + str.charCodeAt(i);
-    return Math.abs(h & 0xFFFFFFFF).toString(36);
-  }
-  function checksum(obj) { return simpleHash(JSON.stringify(obj) + SALT); }
+  function checksum(obj) { return AnswerVerifier.simpleHash(JSON.stringify(obj) + SALT); }
 
   // --- Advanced state (checklist progress per module) ---
   const adv = {
     // checks: { g1: [0,2,3], ... }  已勾選的檢核項 index
     checks: (function () {
       try {
-        const raw = store.get('finmath_advanced_checks');
-        const sig = store.get('finmath_advanced_checks_sig');
+        const raw = store.get(FinStorage.KEYS.ADVANCED_CHECKS);
+        const sig = store.get(FinStorage.KEYS.ADVANCED_CHECKS_SIG);
         if (raw) {
           const parsed = JSON.parse(raw);
           if (checksum(parsed) === sig) return parsed;
@@ -40,8 +34,8 @@
   };
 
   function saveChecks() {
-    store.set('finmath_advanced_checks', JSON.stringify(adv.checks));
-    store.set('finmath_advanced_checks_sig', checksum(adv.checks));
+    store.set(FinStorage.KEYS.ADVANCED_CHECKS, JSON.stringify(adv.checks));
+    store.set(FinStorage.KEYS.ADVANCED_CHECKS_SIG, checksum(adv.checks));
   }
 
   function moduleById(id) {
@@ -73,8 +67,7 @@
 
   function isUnlocked() {
     try {
-      const raw = store.get('finmath_completed_topics');
-      const arr = raw ? JSON.parse(raw) : [];
+      const arr = FinStorage.getCompletedTopics();
       return Array.isArray(arr) && arr.length >= advancedSyllabus.meta.unlockRequirement;
     } catch (e) { return false; }
   }
@@ -392,7 +385,7 @@
     if (isModuleLocked(adv.activeId)) showModuleLockWarning(adv.activeId);
     else renderDetail();
     modal.classList.add('active');
-    store.set('finmath_advanced_seen', '1');
+    store.set(FinStorage.KEYS.ADVANCED_SEEN, '1');
   }
   function closeModal() {
     const modal = document.getElementById('advancedModal');
@@ -414,7 +407,7 @@
     }
 
     // 第一次達標 → 自動彈出新圖譜（符合「跳出進階模式就能看到新圖譜」）
-    if (unlocked && !store.get('finmath_advanced_seen')) {
+    if (unlocked && !store.get(FinStorage.KEYS.ADVANCED_SEEN)) {
       setTimeout(openModal, 600);
     }
   }
@@ -430,13 +423,7 @@
     const btn = document.getElementById('btnAdvanced');
     if (btn) btn.addEventListener('click', openModal);
 
-    // 初始解鎖檢查（從 localStorage 讀已完成章節數）
-    let completed = [];
-    try {
-      const raw = store.get('finmath_completed_topics');
-      if (raw) completed = JSON.parse(raw);
-    } catch (e) { /* ignore */ }
-    refreshUnlock(completed);
+    refreshUnlock(FinStorage.getCompletedTopics());
   }
 
   // 對外接口，供 app.js 在進度更新時呼叫

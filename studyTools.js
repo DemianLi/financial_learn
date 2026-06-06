@@ -6,8 +6,8 @@
   'use strict';
 
   const LETTERS = ['A', 'B', 'C', 'D'];
-  const MK = 'finmath_mistakes';     // 錯題本
-  const DK = 'finmath_diagnostic';   // 起點診斷結果
+  const MK = FinStorage.KEYS.MISTAKES;
+  const DK = FinStorage.KEYS.DIAGNOSTIC;
 
   // 同步關鍵樣式，避免外部 CSS 非同步載入前 modal 閃現
   if (!document.getElementById('studyToolsCritical')) {
@@ -17,10 +17,9 @@
     document.head.appendChild(s);
   }
 
-  function load(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
-  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function load(k) { return FinStorage.safeGetJSON(k); }
+  function save(k, v) { FinStorage.safeSetJSON(k, v); }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-  function simpleHash(str) { let h = 5381; for (let i = 0; i < str.length; i++) h = ((h << 5) + h) + str.charCodeAt(i); return Math.abs(h & 0xFFFFFFFF).toString(36); }
 
   // 輕量去除 LaTeX 記號，讓題目在錯題本／匯出中可讀
   function stripMath(t) {
@@ -33,10 +32,7 @@
   }
 
   function topicById(id) { return (typeof syllabusData !== 'undefined' && syllabusData.topics.find(t => t.id === id)) || null; }
-  function correctIdx(topicId, qIndex, q) {
-    for (let i = 0; i < q.options.length; i++) if (simpleHash(topicId + '-' + qIndex + '-' + i) === q.answerHash) return i;
-    return -1;
-  }
+  function correctIdx(topicId, qIndex, q) { return AnswerVerifier.correctIndexOf(topicId, qIndex, q); }
 
   let mistakes = load(MK) || {};     // key: "topicId#qIndex"
   let diagnostic = load(DK) || null;
