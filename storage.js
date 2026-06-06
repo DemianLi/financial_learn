@@ -19,6 +19,9 @@ window.FinStorage = (function () {
     ADVANCED_CHECKS:    'finmath_advanced_checks',
     ADVANCED_CHECKS_SIG:'finmath_advanced_checks_sig',
     ADVANCED_SEEN:      'finmath_advanced_seen',
+    // #19/#21 - setup guide + research notes
+    SETUP_DISMISSED:    'finmath_setup_dismissed',
+    NOTE_PREFIX:        'finmath_note_',
   };
 
   function safeGet(key) {
