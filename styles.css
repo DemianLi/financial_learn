@@ -908,6 +908,14 @@ header {
   max-height: 250px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  /* Magic scroll-shadow: the 'local' covers travel with content and hide
+     the shadows when the scroll edge is reached. The 'scroll' shadow stays
+     fixed, creating a fade that signals more content exists below/above. */
+  background:
+    linear-gradient(#05070e 30%, transparent)           center top    / 100% 2rem   no-repeat local,
+    linear-gradient(transparent, #05070e 70%)           center bottom / 100% 3.5rem no-repeat local,
+    radial-gradient(farthest-side at 50% 100%, rgba(6,182,212,0.12), transparent) center bottom / 100% 2rem no-repeat scroll;
+  background-color: #05070e;
 }
 
 .sandbox-form-grid {
@@ -1267,10 +1275,11 @@ footer a:hover {
   .modal-box {
     width: 100vw;
     max-width: 100vw;
-    /* svh: always subtracts all browser UI — fixes Chrome iOS bottom toolbar
-       hiding modal footer buttons (dvh doesn't account for Chrome's toolbar) */
-    height: 100svh;
-    max-height: 100svh;
+    /* --real-vh is set by JS via visualViewport.height — the only value that
+       reliably excludes Chrome iOS's persistent bottom toolbar. Falls back to
+       100svh (CSS small-viewport) for no-JS environments. */
+    height: var(--real-vh, 100svh);
+    max-height: var(--real-vh, 100svh);
     border-radius: 0;
     margin: 0;
     transform: scale(1);

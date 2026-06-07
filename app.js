@@ -1,5 +1,23 @@
 // app.js - FinMath Map Application Controller (Security & Professional Quant Upgraded)
 
+// --- REAL VIEWPORT HEIGHT UTILITY ---
+// CSS svh/dvh are still unreliable in Chrome iOS (persistent bottom toolbar is
+// NOT subtracted). visualViewport.height is the only cross-browser guarantee.
+// We set --real-vh on load and on every resize so modals use it via CSS.
+(function () {
+  function applyRealVH() {
+    const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--real-vh', h + 'px');
+  }
+  applyRealVH();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', applyRealVH);
+  }
+  window.addEventListener('resize', applyRealVH);
+  // orientationchange fires before the new size is committed — short delay needed
+  window.addEventListener('orientationchange', function () { setTimeout(applyRealVH, 100); });
+})();
+
 // --- SCROLL LOCK UTILITY ---
 // Prevents background scroll when any modal/drawer is open.
 // Uses a counter so nested modals don't prematurely unlock.
