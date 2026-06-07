@@ -668,9 +668,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Build setup guide HTML (only if not dismissed)
     const setupHtml = setupDismissed ? '' : `
       <div id="finmindSetupGuide" style="background:rgba(6,182,212,0.07); border:1px solid var(--subject-b); border-radius:8px; padding:1rem; margin-bottom:0.9rem; font-size:0.82rem; line-height:1.6;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; position:sticky; top:0; background:rgba(6,182,212,0.07); z-index:2; padding:0.25rem 0;">
           <span style="font-weight:700; color:var(--subject-b);">🚀 FinMind 快速啟動（3 步驟）</span>
-          <button id="btnDismissSetup" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem; padding:0 0.2rem;" title="不再顯示">✕</button>
+          <button id="btnDismissSetup" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem; padding:0 0.2rem; line-height:1;" title="不再顯示">✕</button>
         </div>
         <ol style="margin:0 0 0.5rem; padding-left:1.2rem; color:var(--text-primary);">
           <li>安裝：<code style="background:rgba(0,0,0,0.3); padding:0.1rem 0.4rem; border-radius:3px;">pip install FinMind</code></li>
@@ -725,10 +725,11 @@ document.addEventListener('DOMContentLoaded', () => {
       };
     }
 
-    // Wire up dismiss button
+    // Wire up dismiss button (re-bind every call so it works after topic switch)
     const btnDismiss = codeSection.querySelector('#btnDismissSetup');
     if (btnDismiss) {
-      btnDismiss.onclick = () => {
+      btnDismiss.onclick = (e) => {
+        e.stopPropagation();
         FinStorage.safeSet(FinStorage.KEYS.SETUP_DISMISSED, '1');
         const guide = codeSection.querySelector('#finmindSetupGuide');
         if (guide) guide.remove();
@@ -1177,7 +1178,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       btn.onclick = () => {
         const thesisInputs = panel.querySelectorAll('.thesis-input');
-        const thesisText = [...thesisInputs].map(i => i.value.trim()).filter(Boolean).join(' / ');
+        const thesisText = [...thesisInputs]
+          .map(i => ({ label: i.placeholder, value: i.value.trim() }))
+          .filter(p => p.value)
+          .map(p => `${p.label}: ${p.value}`)
+          .join('｜');
         recordDeliverableDone(topic.id, thesisText);
         renderMasteryPanel(topic);
       };
