@@ -1470,11 +1470,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderMockExamScreen() {
     const modalBody = elements.examContentBox;
     modalBody.innerHTML = '';
-    
+
     const idx = state.mockExam.currentIndex;
     const isIntro = idx === -1;
     const isFinished = idx === 5;
-    
+
     // Control footer action buttons display
     elements.btnPrevExam.style.display = isFinished || isIntro ? 'none' : 'inline-flex';
     elements.btnNextExam.style.display = isFinished || isIntro || idx === 4 ? 'none' : 'inline-flex';
@@ -1485,18 +1485,25 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Pin ABCD options so they never scroll off screen when question text is long
+    modalBody.classList.add('exam-body-layout');
+
     const mockQ = state.mockExam.questions[idx];
     const q = mockQ.examQuestion;
-    
+
     const examCard = document.createElement('div');
     examCard.className = 'exam-question-card';
     examCard.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <div class="exam-q-header">
         <span class="exam-badge" style="background:var(--subject-d)">Question ${idx + 1} of 5</span>
         <span style="font-size:0.8rem; color:var(--text-muted)">Subject: ${syllabusData.subjects[mockQ.subject].title}</span>
       </div>
-      <p class="exam-question" style="font-size:1.05rem; line-height:1.6; margin-bottom:1.5rem;">${formatMathText(q.question)}</p>
-      <div class="exam-options-grid" id="examMockOptions"></div>
+      <div class="exam-q-scroll">
+        <p class="exam-question" style="font-size:1.05rem; line-height:1.6; margin:0;">${formatMathText(q.question)}</p>
+      </div>
+      <div class="exam-q-options">
+        <div class="exam-options-grid" id="examMockOptions"></div>
+      </div>
     `;
 
     modalBody.appendChild(examCard);
@@ -1562,6 +1569,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderExamResults() {
     const modalBody = elements.examContentBox;
+    modalBody.classList.remove('exam-body-layout');
     const score = state.mockExam.score;
     
     // Determine high-school mock exam rank

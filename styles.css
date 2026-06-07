@@ -785,6 +785,46 @@ header {
   gap: 0.4rem;
 }
 
+/* Exam layout: pin ABCD options so they never scroll off screen on long questions */
+.modal-body.exam-body-layout {
+  padding: 0;
+  overflow: hidden;
+}
+
+.exam-question-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.exam-q-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.exam-q-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem 1.5rem 0.5rem;
+  background:
+    linear-gradient(var(--bg-secondary) 30%, rgba(12, 16, 32, 0))  center top    / 100% 2.5rem no-repeat local,
+    linear-gradient(rgba(12, 16, 32, 0), var(--bg-secondary) 70%) center bottom / 100% 3rem   no-repeat local;
+  background-color: var(--bg-secondary);
+}
+
+.exam-q-options {
+  flex-shrink: 0;
+  padding: 0.75rem 1.5rem 1rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
 /* Empty State Details Card */
 .detail-empty-state {
   display: flex;
