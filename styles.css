@@ -899,6 +899,13 @@ header {
   gap: 1rem;
 }
 
+/* Sandbox code output block — height capped on desktop, freed on mobile */
+.sandbox-output-wrapper {
+  max-height: 250px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .sandbox-form-grid {
   display: grid;
   grid-template-columns: 1.2fr 1fr 1fr;
@@ -1280,5 +1287,10 @@ footer a:hover {
     border-radius: 0;
     min-height: 100dvh;
     padding: 1rem;
+  }
+  /* FinMind 沙盒代碼區塊：行動版移除固定高度，讓 modal 統一捲動 */
+  .sandbox-output-wrapper {
+    max-height: none;
+    overflow-y: visible;
   }
 }

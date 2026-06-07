@@ -64,14 +64,14 @@
 
         <div class="ai-modal-body">
           <!-- LEFT COLUMN: Parameter Controls & Agent Topology SVG Map -->
-          <div class="ai-col-left">
+          <div class="ai-col-left ai-tab-active">
             <div class="ai-card">
               <h4 style="font-size:0.95rem; margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
                 <span>⚙️ 參數調校與智能體控制</span>
                 <span style="font-size:0.7rem; color:var(--ai-secondary); border:1px solid var(--ai-secondary); padding:0.15rem 0.4rem; border-radius:4px;">學術沙盒</span>
               </h4>
               
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:1rem;">
+              <div class="ai-form-grid">
                 <div class="ai-form-group">
                   <label for="aiStockSelector">目標台股個股</label>
                   <select id="aiStockSelector" class="ai-select">
@@ -193,6 +193,12 @@
             </div>
           </div>
         </div>
+
+        <!-- Tab Bar — visible only on mobile (hidden via CSS on desktop) -->
+        <div class="ai-tab-bar" id="aiTabBar" role="tablist">
+          <button class="ai-tab-btn active" id="aiTabParams" role="tab" aria-selected="true">⚙️ 參數</button>
+          <button class="ai-tab-btn" id="aiTabConsole" role="tab" aria-selected="false">📺 Console</button>
+        </div>
       </div>
     `;
 
@@ -257,8 +263,36 @@
       }
     });
 
-    // Run Simulation click handler
+    // Tab Bar switching (mobile only — CSS hides tab bar on desktop)
+    const colLeft  = document.querySelector('.ai-col-left');
+    const colRight = document.querySelector('.ai-col-right');
+    const tabParams  = document.getElementById('aiTabParams');
+    const tabConsole = document.getElementById('aiTabConsole');
+
+    function activateTab(tab) {
+      if (tab === 'params') {
+        colLeft.classList.add('ai-tab-active');
+        colRight.classList.remove('ai-tab-active');
+        tabParams.classList.add('active');
+        tabParams.setAttribute('aria-selected', 'true');
+        tabConsole.classList.remove('active');
+        tabConsole.setAttribute('aria-selected', 'false');
+      } else {
+        colRight.classList.add('ai-tab-active');
+        colLeft.classList.remove('ai-tab-active');
+        tabConsole.classList.add('active');
+        tabConsole.setAttribute('aria-selected', 'true');
+        tabParams.classList.remove('active');
+        tabParams.setAttribute('aria-selected', 'false');
+      }
+    }
+
+    tabParams.addEventListener('click',  () => activateTab('params'));
+    tabConsole.addEventListener('click', () => activateTab('console'));
+
+    // Run Simulation click handler — auto-switch to Console tab on mobile
     btnRun.addEventListener('click', () => {
+      activateTab('console');
       runSimulation(btnRun, stockSelector.value, parseFloat(slideWacc.value), parseFloat(slideG.value));
     });
   }
