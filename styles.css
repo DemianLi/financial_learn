@@ -1297,6 +1297,12 @@ footer a:hover {
   #btnDiagnostic::before { content: '🎯'; font-size: 1rem; }
 
   /* --- Candidate D: Modals 全螢幕 --- */
+  /* Fix iOS Safari 100vh large-viewport bug: overlay must match visual viewport
+     so the flex-centered modal-box bottom doesn't fall behind Safari's toolbar. */
+  .modal-overlay {
+    height: var(--real-vh, 100dvh);
+    align-items: flex-start;
+  }
   .modal-box {
     width: 100vw;
     max-width: 100vw;

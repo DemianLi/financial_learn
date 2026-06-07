@@ -427,6 +427,13 @@
 
 /* ── 行動版 RWD ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  /* Fix iOS Safari 100vh large-viewport bug: overlay height must match the
+     visual viewport so the full-screen modal-box bottom clears Safari's toolbar. */
+  .ai-modal-overlay {
+    height: var(--real-vh, 100dvh);
+    align-items: flex-start;
+  }
+
   /* Full-screen modal */
   .ai-modal-box {
     width: 100vw;
@@ -481,10 +488,11 @@
     font-size: 0.74rem;
   }
 
-  /* Warning banner: tighter on mobile */
+  /* Warning banner: tighter on mobile, never shrinks into tab bar */
   .ai-modal-box > div[style*="margin:0 1.5rem"] {
     margin: 0 0.8rem !important;
     font-size: 0.68rem;
+    flex-shrink: 0;
   }
 
   /* Tab Bar */
