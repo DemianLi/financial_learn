@@ -1298,6 +1298,7 @@ footer a:hover {
     padding: 0.5rem;
     min-width: 0;
     justify-content: center;
+    gap: 0;                  /* 消除基底 gap:0.5rem：零寬文字節點仍佔 flex 位置，gap 會讓 emoji 偏左 */
   }
   .header-actions .btn::before {
     font-size: 1.1rem;
