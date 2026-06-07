@@ -1013,7 +1013,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const stockId = sessionStorage.getItem('finmath_stock_id') || '2330';
       const noteKey = FinStorage.KEYS.NOTE_PREFIX + topicId + '_' + stockId;
       FinStorage.safeSet(noteKey, thesisText);
-      // Update header button visibility
       const btnNote = document.getElementById('btnResearchNote');
       if (btnNote) btnNote.style.display = '';
     }
