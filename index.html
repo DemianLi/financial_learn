@@ -28,6 +28,9 @@
       </div>
       
       <div class="header-actions">
+        <button id="btnResearchNote" class="btn" style="display:none;" aria-label="查看研究筆記">
+          📋 研究筆記
+        </button>
         <button id="btnSandbox" class="btn" aria-label="打開代碼沙盒產生器">
           ⚡ FinMind 沙盒代碼
         </button>
@@ -39,6 +42,22 @@
         </button>
       </div>
     </header>
+
+    <!-- #21: Research Notes Modal -->
+    <div id="researchNoteModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.75); overflow-y:auto;">
+      <div style="max-width:680px; margin:4rem auto; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:12px; padding:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+          <h3 style="margin:0; color:var(--text-primary);">📋 我的研究筆記</h3>
+          <button id="btnCloseNoteModal" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.4rem; line-height:1;">✕</button>
+        </div>
+        <p style="font-size:0.82rem; color:var(--text-secondary); margin:0 0 1rem; line-height:1.5;">
+          每次完成微產出時填寫的投資論點模板，會自動儲存在此。這是你從資料到交付物的練習紀錄。
+        </p>
+        <div id="researchNoteList" style="display:flex; flex-direction:column; gap:0.8rem;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
 
     <!-- Main Dashboard Grid Layout -->
     <main class="dashboard-grid">
@@ -85,6 +104,9 @@
                 <span id="scoreTextF" style="font-weight:600;">大綱解鎖中</span>
               </div>
             </div>
+
+            <!-- #22: Dual-axis progress (populated by JS) -->
+            <div id="dualAxisRow"></div>
 
             <!-- 進階科目 G：機構研究實戰（完成 A–F 後解鎖才顯示） -->
             <div id="advancedProgressRow" style="display:none; margin-top:0.7rem; padding-top:0.7rem; border-top:1px solid var(--border-color);">
