@@ -962,6 +962,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // 證據一：測驗答對（通關仍需完成微產出）
           recordExamPassed(topic.id);
           renderMasteryPanel(topic);
+          document.getElementById('masteryPanel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
           btn.classList.add('wrong');
 
@@ -1063,7 +1064,7 @@ document.addEventListener('DOMContentLoaded', () => {
       panel = document.createElement('div');
       panel.id = 'masteryPanel';
       const examSection = elements.detailContent.querySelector('.exam-section');
-      examSection.parentNode.insertBefore(panel, examSection);
+      examSection.after(panel);
     }
     panel.style.display = 'block';
 
