@@ -16,6 +16,8 @@
   window.addEventListener('resize', applyRealVH);
   // orientationchange fires before the new size is committed — short delay needed
   window.addEventListener('orientationchange', function () { setTimeout(applyRealVH, 100); });
+  // Expose so lockScroll can re-measure after body becomes fixed (toolbar may reappear)
+  window._applyRealVH = applyRealVH;
 })();
 
 // --- SCROLL LOCK UTILITY ---
@@ -30,6 +32,10 @@ window.lockScroll = function () {
     document.body.style.position = 'fixed';
     document.body.style.overflow = 'hidden';
     document.body.style.width = '100%';
+    // iOS Safari: position:fixed may cause the toolbar to reappear, shrinking
+    // visualViewport.height. Re-measure --real-vh after the next paint so modals
+    // sized by --real-vh shrink to fit the now-visible toolbar.
+    requestAnimationFrame(function () { window._applyRealVH && window._applyRealVH(); });
   }
   _scrollLockCount++;
 };
