@@ -407,13 +407,24 @@ header {
   border-left: 1px solid var(--border-color);
   box-shadow: -10px 0 35px rgba(0, 0, 0, 0.5);
   transform: translateX(100%); /* Offscreen by default */
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* backdrop-filter creates a GPU composited layer that can intercept touch
+     events on mobile Chrome even when translateX(100%) is off-screen.
+     visibility:hidden is the only browser-guaranteed way to fully remove the
+     layer from touch hit-testing. Delay matches the slide-out duration. */
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0s linear 0.4s;
   display: flex;
   flex-direction: column;
 }
 
 .panel-right.active {
   transform: translateX(0); /* Slide in */
+  visibility: visible;
+  pointer-events: auto;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0s linear 0s;
 }
 
 .detail-card {
@@ -1177,9 +1188,13 @@ footer a:hover {
     border-radius: 16px 16px 0 0;
     transform: translateY(105%);  /* 預設藏到底部（稍微超出，確保隱藏）*/
     box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0s linear 0.4s;
   }
   .panel-right.active {
     transform: translateY(0);    /* 向上滑入 */
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0s linear 0s;
   }
   /* 拖拉把手 */
   .detail-card::before {
