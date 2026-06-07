@@ -815,6 +815,7 @@ header {
 
 .exam-q-scroll {
   flex: 1;
+  min-height: 0; /* allow shrink to 0 so exam-q-options stays pinned on long questions */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 1rem 1.5rem 0.5rem;
