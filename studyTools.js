@@ -168,7 +168,7 @@
     o.id = id; o.className = 'modal-overlay st-overlay';
     o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true');
     document.body.appendChild(o);
-    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); });
+    o.addEventListener('click', e => { if (e.target === o) { o.classList.remove('active'); window.unlockScroll(); } });
     return o;
   }
 
@@ -191,10 +191,11 @@
           <button class="btn btn-primary" data-export ${list.length ? '' : 'disabled'}>📥 匯出 Markdown</button>
         </div>
       </div>`;
-    o.querySelector('[data-close]').onclick = () => o.classList.remove('active');
+    o.querySelector('[data-close]').onclick = () => { o.classList.remove('active'); window.unlockScroll(); };
     o.querySelector('[data-export]').onclick = exportMistakesMd;
     const clr = o.querySelector('[data-clear]');
     if (clr) clr.onclick = () => { mistakes = {}; save(MK, mistakes); updateBadge(); openMistakes(); };
+    window.lockScroll();
     o.classList.add('active');
   }
   function renderMistakeCard(m) {
@@ -223,8 +224,9 @@
           ${diagnostic ? renderPlanView(diagnostic) : renderDiagForm()}
         </div>
       </div>`;
-    o.querySelector('[data-close]').onclick = () => o.classList.remove('active');
+    o.querySelector('[data-close]').onclick = () => { o.classList.remove('active'); window.unlockScroll(); };
     wireDiag(o);
+    window.lockScroll();
     o.classList.add('active');
   }
   function renderDiagForm() {

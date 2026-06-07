@@ -250,16 +250,19 @@
     // Launch & Close handlers
     btnLaunch.addEventListener('click', () => {
       modal.classList.add('active');
+      window.lockScroll();
     });
 
     btnClose.addEventListener('click', () => {
       modal.classList.remove('active');
+      window.unlockScroll();
     });
 
     // Close on overlay click
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
         modal.classList.remove('active');
+        window.unlockScroll();
       }
     });
 

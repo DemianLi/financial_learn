@@ -1,5 +1,33 @@
 // app.js - FinMath Map Application Controller (Security & Professional Quant Upgraded)
 
+// --- SCROLL LOCK UTILITY ---
+// Prevents background scroll when any modal/drawer is open.
+// Uses a counter so nested modals don't prematurely unlock.
+let _scrollLockCount = 0;
+window.lockScroll = function () {
+  if (_scrollLockCount === 0 && document.body.style.position !== 'fixed') {
+    const top = window.scrollY;
+    document.body.dataset.scrollY = top;
+    document.body.style.top = `-${top}px`;
+    document.body.style.position = 'fixed';
+    document.body.style.overflow = 'hidden';
+    document.body.style.width = '100%';
+  }
+  _scrollLockCount++;
+};
+window.unlockScroll = function () {
+  _scrollLockCount = Math.max(0, _scrollLockCount - 1);
+  if (_scrollLockCount === 0 && document.body.style.position === 'fixed') {
+    const top = Math.abs(parseInt(document.body.dataset.scrollY || '0', 10));
+    document.body.style.position = '';
+    document.body.style.overflow = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    delete document.body.dataset.scrollY;
+    window.scrollTo(0, top);
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   // --- CRYPTO SECURITY HELPER ---
   const SECURE_SALT = "FinMathSecureSalt2026";
@@ -533,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (elements.detailEmpty) elements.detailEmpty.style.display = 'none';
     elements.detailContent.style.display = 'flex';
-    if (elements.panelRight) elements.panelRight.classList.add('active');
+    if (elements.panelRight) { elements.panelRight.classList.add('active'); window.lockScroll(); }
 
     const badge = elements.detailContent.querySelector('.detail-subject-badge');
     badge.style.backgroundColor = 'var(--text-muted)';
@@ -753,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function populateDetailDrawer(topic) {
     if (elements.detailEmpty) elements.detailEmpty.style.display = 'none';
     elements.detailContent.style.display = 'flex';
-    if (elements.panelRight) elements.panelRight.classList.add('active');
+    if (elements.panelRight) { elements.panelRight.classList.add('active'); window.lockScroll(); }
 
     ['.formula-container', '.objectives-section', '.skill-align-card', '.code-section', '.exam-section'].forEach(sel => {
       const el = elements.detailContent.querySelector(sel);
@@ -1418,6 +1446,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderMockExamScreen();
     elements.examModal.classList.add('active');
+    window.lockScroll();
   }
 
   function renderMockExamScreen() {
@@ -1573,6 +1602,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function openSandbox() {
     generateSandboxCode();
     elements.sandboxModal.classList.add('active');
+    window.lockScroll();
   }
 
   function generateSandboxCode() {
@@ -1715,6 +1745,7 @@ print(df[['date', 'title']].tail(5))
     elements.btnSandbox.addEventListener('click', openSandbox);
     elements.btnCloseSandbox.addEventListener('click', () => {
       elements.sandboxModal.classList.remove('active');
+      window.unlockScroll();
     });
     
     // Auto trigger updates on input change inside sandbox
@@ -1794,15 +1825,17 @@ print(df[['date', 'title']].tail(5))
           }
         }
         researchNoteModal.style.display = 'block';
+        window.lockScroll();
       });
-      if (btnCloseNoteModal) btnCloseNoteModal.addEventListener('click', () => { researchNoteModal.style.display = 'none'; });
-      researchNoteModal.addEventListener('click', e => { if (e.target === researchNoteModal) researchNoteModal.style.display = 'none'; });
+      if (btnCloseNoteModal) btnCloseNoteModal.addEventListener('click', () => { researchNoteModal.style.display = 'none'; window.unlockScroll(); });
+      researchNoteModal.addEventListener('click', e => { if (e.target === researchNoteModal) { researchNoteModal.style.display = 'none'; window.unlockScroll(); } });
     }
 
     // Mock Exam Listeners
     elements.btnMockExam.addEventListener('click', openMockExam);
     elements.btnCloseExam.addEventListener('click', () => {
       elements.examModal.classList.remove('active');
+      window.unlockScroll();
     });
 
     elements.btnPrevExam.addEventListener('click', () => {
@@ -1829,6 +1862,7 @@ print(df[['date', 'title']].tail(5))
       elements.btnCloseDetail.addEventListener('click', () => {
         if (elements.panelRight) {
           elements.panelRight.classList.remove('active');
+          window.unlockScroll();
         }
         state.activeTopic = null;
         renderSvgMap(); // Clear active glow state
@@ -1839,20 +1873,23 @@ print(df[['date', 'title']].tail(5))
     window.addEventListener('click', (e) => {
       if (e.target === elements.sandboxModal) {
         elements.sandboxModal.classList.remove('active');
+        window.unlockScroll();
       }
       if (e.target === elements.examModal) {
         elements.examModal.classList.remove('active');
+        window.unlockScroll();
       }
-      
+
       // Backdrop click to dismiss floating details drawer
       if (elements.panelRight && elements.panelRight.classList.contains('active')) {
         const clickedInsideDrawer = elements.panelRight.contains(e.target);
         const clickedOnNode = e.target.closest('.map-node-group');
         const clickedOnSandboxBtn = e.target === elements.btnSandbox;
         const clickedOnExamBtn = e.target === elements.btnMockExam;
-        
+
         if (!clickedInsideDrawer && !clickedOnNode && !clickedOnSandboxBtn && !clickedOnExamBtn) {
           elements.panelRight.classList.remove('active');
+          window.unlockScroll();
           state.activeTopic = null;
           renderSvgMap();
         }

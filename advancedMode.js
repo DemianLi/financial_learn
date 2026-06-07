@@ -385,11 +385,12 @@
     if (isModuleLocked(adv.activeId)) showModuleLockWarning(adv.activeId);
     else renderDetail();
     modal.classList.add('active');
+    window.lockScroll();
     store.set(FinStorage.KEYS.ADVANCED_SEEN, '1');
   }
   function closeModal() {
     const modal = document.getElementById('advancedModal');
-    if (modal) modal.classList.remove('active');
+    if (modal) { modal.classList.remove('active'); window.unlockScroll(); }
   }
 
   // ===========================================================

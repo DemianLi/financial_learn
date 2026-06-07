@@ -943,6 +943,15 @@ header {
   box-shadow: 0 0 8px rgba(6, 182, 212, 0.2);
 }
 
+/* Prevent scroll chaining: inner modal content stops at its own scroll boundary */
+.modal-body,
+.detail-body,
+.ai-col-left,
+.ai-col-right,
+.ai-terminal {
+  overscroll-behavior: contain;
+}
+
 /* Keyframes Animations */
 @keyframes floatNode {
   0% { transform: translateY(0px); }
