@@ -1,6 +1,6 @@
 /* styles.css - FinMath Map Premium Design System */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
   /* HSL Color System */
@@ -15,17 +15,17 @@
   --text-muted: #64748b;
   
   /* Subject Accents */
-  --subject-a: hsl(142, 70%, 50%); /* Emerald Green */
-  --subject-b: hsl(187, 92%, 45%); /* Cyan */
-  --subject-c: hsl(263, 90%, 65%); /* Purple */
-  --subject-d: hsl(24, 95%, 55%);  /* Amber */
-  --subject-e: hsl(340, 82%, 52%);  /* Crimson Pink */
-  --subject-f: hsl(26, 93%, 60%);   /* Orange Catalyst */
-  
-  --shadow-glow: rgba(6, 182, 212, 0.15);
-  
+  --subject-a: hsl(142, 65%, 48%); /* Emerald — completion / correct */
+  --subject-b: hsl(187, 80%, 42%); /* Cyan — primary interaction accent */
+  --subject-c: hsl(263, 55%, 60%); /* Purple — muted, subject label only */
+  --subject-d: hsl(24, 85%, 52%);  /* Amber */
+  --subject-e: hsl(340, 70%, 50%);  /* Crimson */
+  --subject-f: hsl(26, 80%, 55%);   /* Orange */
+
+  --shadow-glow: rgba(6, 182, 212, 0.12);
+
   /* Fonts */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: 'JetBrains Mono', "Courier New", monospace;
   
   --transition-smooth: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -41,10 +41,8 @@
 
 body {
   background-color: var(--bg-primary);
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.15) 0px, transparent 50%),
-    radial-gradient(at 50% 50%, rgba(15, 23, 42, 0.95) 0px, var(--bg-primary) 100%);
+  background-image:
+    radial-gradient(ellipse at 88% 94%, rgba(6, 182, 212, 0.06) 0px, transparent 52%);
   background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-sans);
@@ -72,7 +70,7 @@ body {
 /* Typography & Layout Utilities */
 h1, h2, h3, h4 {
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: var(--text-primary);
 }
 
@@ -199,7 +197,7 @@ header {
 }
 
 .glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(6, 182, 212, 0.2);
 }
 
 /* Progress Radar Card - Restructured to stacked layout for widescreen panel alignment */
@@ -234,7 +232,7 @@ header {
 .progress-bar-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--subject-b) 0%, var(--subject-c) 100%);
+  background: linear-gradient(90deg, var(--subject-a) 0%, var(--subject-b) 100%);
   border-radius: 4px;
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -589,9 +587,9 @@ header {
 }
 
 .skill-align-badge {
-  background: rgba(139, 92, 246, 0.15);
-  color: var(--subject-c);
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: rgba(6, 182, 212, 0.1);
+  color: var(--subject-b);
+  border: 1px solid rgba(6, 182, 212, 0.25);
   padding: 0.1rem 0.5rem;
   border-radius: 4px;
   font-size: 0.7rem;
@@ -971,14 +969,14 @@ header {
   width: 110px;
   height: 110px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--subject-b) 0%, var(--subject-c) 100%);
+  background: linear-gradient(135deg, var(--subject-a) 0%, var(--subject-b) 100%);
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 2.5rem;
   font-weight: 700;
   color: #fff;
-  box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 10px 25px rgba(6, 182, 212, 0.28);
 }
 
 .result-score {
