@@ -807,13 +807,19 @@ header {
   justify-content: center;
   align-items: center;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  /* visibility switches to hidden AFTER opacity fades out (0.3s delay on close) */
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
 }
 
 .modal-overlay.active {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  /* visibility shows IMMEDIATELY on open, then opacity fades in */
+  transition: opacity 0.3s ease, visibility 0s linear 0s;
+}
 }
 
 .modal-box {

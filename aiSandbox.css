@@ -25,13 +25,16 @@
   justify-content: center;
   align-items: center;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
 }
 
 .ai-modal-overlay.active {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  transition: opacity 0.3s ease, visibility 0s linear 0s;
 }
 
 .ai-modal-box {
