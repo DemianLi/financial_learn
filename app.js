@@ -33,9 +33,10 @@ window.lockScroll = function () {
     document.body.style.overflow = 'hidden';
     document.body.style.width = '100%';
     // iOS Safari: position:fixed may cause the toolbar to reappear, shrinking
-    // visualViewport.height. Re-measure --real-vh after the next paint so modals
-    // sized by --real-vh shrink to fit the now-visible toolbar.
+    // visualViewport.height. rAF catches the first settled frame (~16ms); the
+    // 150ms timeout catches the end of the toolbar slide-in animation (~250ms).
     requestAnimationFrame(function () { window._applyRealVH && window._applyRealVH(); });
+    setTimeout(function () { window._applyRealVH && window._applyRealVH(); }, 150);
   }
   _scrollLockCount++;
 };
