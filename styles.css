@@ -1291,59 +1291,35 @@ footer a:hover {
     justify-content: flex-end;
     width: auto;
   }
-  /* 非核心按鈕在手機上縮成 icon */
-  #btnSandbox {
-    font-size: 0;               /* 隱藏文字，只留 icon */
-    padding: 0.4rem 0.5rem;
-    min-width: 0;
-  }
-  #btnSandbox::before { content: '⚡'; font-size: 1rem; }
-  #btnAdvanced {
+  /* 非核心按鈕在手機上縮成 icon-only：統一收攏，避免文字節點佔高度導致 icon 無法置中 */
+  .header-actions .btn {
     font-size: 0;
-    padding: 0.4rem 0.5rem;
+    line-height: 0;          /* 消除文字節點殘留的行高，讓 ::before emoji 可真正垂直置中 */
+    padding: 0.5rem;
     min-width: 0;
+    justify-content: center;
   }
-  #btnAdvanced::before { content: '🚀'; font-size: 1rem; }
-  #btnResearchNote {
-    font-size: 0;
-    padding: 0.4rem 0.5rem;
-    min-width: 0;
+  .header-actions .btn::before {
+    font-size: 1.1rem;
+    line-height: 1;
   }
-  #btnResearchNote::before { content: '📋'; font-size: 1rem; }
-  #btnMockExam {
-    font-size: 0;
-    padding: 0.4rem 0.5rem;
-    min-width: 0;
-  }
-  #btnMockExam::before { content: '📝'; font-size: 1rem; }
-  /* studyTools 動態按鈕 */
-  #btnAiAnalyst {
-    font-size: 0 !important;
-    padding: 0.4rem 0.5rem !important;
-    min-width: 0 !important;
-    margin-right: 0 !important;
-  }
-  #btnAiAnalyst::before { content: '🤖'; font-size: 1rem; }
-  #btnMistakes {
-    font-size: 0;
-    padding: 0.4rem 0.5rem;
-    min-width: 0;
-  }
-  #btnMistakes::before { content: '📓'; font-size: 1rem; }
+  #btnSandbox::before    { content: '⚡'; }
+  #btnAdvanced::before   { content: '🚀'; }
+  #btnResearchNote::before { content: '📋'; }
+  #btnMockExam::before   { content: '📝'; }
+  #btnAiAnalyst::before  { content: '🤖'; }
+  #btnMistakes::before   { content: '📓'; }
+  #btnDiagnostic::before { content: '🎯'; }
+  /* 動態注入按鈕的額外覆寫 */
+  #btnAiAnalyst { margin-right: 0 !important; }
   /* 保留錯題本角標可見 */
+  #btnMistakes { position: relative; }
   #stMistakeBadge {
     font-size: 0.6rem !important;
     position: absolute;
     top: 2px;
     right: 2px;
   }
-  #btnMistakes { position: relative; }
-  #btnDiagnostic {
-    font-size: 0;
-    padding: 0.4rem 0.5rem;
-    min-width: 0;
-  }
-  #btnDiagnostic::before { content: '🎯'; font-size: 1rem; }
 
   /* --- Candidate D: Modals 全螢幕 --- */
   /* Fix iOS Safari 100vh large-viewport bug: overlay must match visual viewport
