@@ -785,16 +785,22 @@ header {
   gap: 0.4rem;
 }
 
-/* Exam layout: pin ABCD options so they never scroll off screen on long questions */
+/* Exam layout: pin ABCD options so they never scroll off screen on long questions.
+   modal-body becomes a flex container so exam-question-card can use flex:1 instead
+   of height:100% — the latter is unreliable in Safari when the parent height comes
+   from a flex algorithm rather than an explicit value. */
 .modal-body.exam-body-layout {
   padding: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .exam-question-card {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
