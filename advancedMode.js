@@ -146,13 +146,40 @@
     svg.innerHTML = '';
     const accent = advancedSyllabus.meta.color;
 
+    // On mobile: horizontal strip layout. On desktop: original 2-column tree.
+    const isMobile = window.innerWidth <= 760;
+    const NODE_SPACING = 95;
+    const STRIP_Y = 55;
+    const STRIP_START_X = 55;
+
+    // Position lookup: desktop uses data x/y, mobile computes horizontal strip
+    const pos = {};
+    advancedSyllabus.modules.forEach((m, i) => {
+      pos[m.id] = isMobile
+        ? { x: STRIP_START_X + i * NODE_SPACING, y: STRIP_Y }
+        : { x: m.x, y: m.y };
+    });
+
+    if (isMobile) {
+      const totalW = STRIP_START_X * 2 + (advancedSyllabus.modules.length - 1) * NODE_SPACING;
+      svg.setAttribute('viewBox', `0 0 ${totalW} 110`);
+      svg.style.width = totalW + 'px';
+      svg.style.height = '110px';
+      svg.style.display = 'block';
+    } else {
+      svg.setAttribute('viewBox', '0 0 570 760');
+      svg.style.width = '100%';
+      svg.style.height = '100%';
+      svg.style.display = '';
+    }
+
     // connections
     advancedSyllabus.connections.forEach(c => {
       const a = moduleById(c.from), b = moduleById(c.to);
       if (!a || !b) return;
       const line = document.createElementNS(SVGNS, 'line');
-      line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
-      line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+      line.setAttribute('x1', pos[c.from].x); line.setAttribute('y1', pos[c.from].y);
+      line.setAttribute('x2', pos[c.to].x);   line.setAttribute('y2', pos[c.to].y);
       const both = isModuleComplete(a) && isModuleComplete(b);
       line.setAttribute('class', 'adv-link' + (both ? ' done' : ''));
       svg.appendChild(line);
@@ -160,6 +187,7 @@
 
     // nodes
     advancedSyllabus.modules.forEach(m => {
+      const mx = pos[m.id].x, my = pos[m.id].y;
       const g = document.createElementNS(SVGNS, 'g');
       g.setAttribute('class', 'adv-node');
       g.setAttribute('id', 'adv-node-' + m.id);
@@ -171,13 +199,13 @@
       if (active) g.classList.add('active');
 
       const hit = document.createElementNS(SVGNS, 'circle');
-      hit.setAttribute('cx', m.x); hit.setAttribute('cy', m.y);
+      hit.setAttribute('cx', mx); hit.setAttribute('cy', my);
       hit.setAttribute('r', 30); hit.setAttribute('fill', 'rgba(0,0,0,0)');
       hit.setAttribute('cursor', locked ? 'not-allowed' : 'pointer');
       g.appendChild(hit);
 
       const ring = document.createElementNS(SVGNS, 'circle');
-      ring.setAttribute('cx', m.x); ring.setAttribute('cy', m.y);
+      ring.setAttribute('cx', mx); ring.setAttribute('cy', my);
       ring.setAttribute('r', 22);
       ring.setAttribute('class', 'adv-node-ring');
       ring.setAttribute('fill', (active && !locked) ? accent : 'var(--bg-secondary)');
@@ -186,32 +214,35 @@
       g.appendChild(ring);
 
       const icon = document.createElementNS(SVGNS, 'text');
-      icon.setAttribute('x', m.x); icon.setAttribute('y', m.y + 5);
+      icon.setAttribute('x', mx); icon.setAttribute('y', my + 5);
       icon.setAttribute('text-anchor', 'middle');
       icon.setAttribute('font-size', locked ? '14px' : '16px');
-      if (locked) icon.setAttribute('y', m.y + 4);
+      if (locked) icon.setAttribute('y', my + 4);
       icon.textContent = locked ? '🔒' : m.icon;
       g.appendChild(icon);
 
       const num = document.createElementNS(SVGNS, 'text');
-      num.setAttribute('x', m.x); num.setAttribute('y', m.y - 30);
+      num.setAttribute('x', mx); num.setAttribute('y', my - 30);
       num.setAttribute('text-anchor', 'middle');
       num.setAttribute('class', 'adv-node-num');
       num.setAttribute('fill', locked ? '#475569' : accent);
       num.textContent = m.num;
       g.appendChild(num);
 
-      const label = document.createElementNS(SVGNS, 'text');
-      label.setAttribute('x', m.x); label.setAttribute('y', m.y + 42);
-      label.setAttribute('text-anchor', 'middle');
-      label.setAttribute('class', 'adv-node-label');
-      const short = m.title.split('：')[0];
-      label.textContent = short.length > 12 ? short.slice(0, 11) + '…' : short;
-      g.appendChild(label);
+      // On mobile show only the num badge; desktop shows full label below node
+      if (!isMobile) {
+        const label = document.createElementNS(SVGNS, 'text');
+        label.setAttribute('x', mx); label.setAttribute('y', my + 42);
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('class', 'adv-node-label');
+        const short = m.title.split('：')[0];
+        label.textContent = short.length > 12 ? short.slice(0, 11) + '…' : short;
+        g.appendChild(label);
+      }
 
       if (done && !locked) {
         const chk = document.createElementNS(SVGNS, 'text');
-        chk.setAttribute('x', m.x + 17); chk.setAttribute('y', m.y - 14);
+        chk.setAttribute('x', mx + 17); chk.setAttribute('y', my - 14);
         chk.setAttribute('text-anchor', 'middle');
         chk.setAttribute('font-size', '13px');
         chk.textContent = '✅';
@@ -226,6 +257,17 @@
     });
   }
 
+  // Scroll the active node into view horizontally (mobile strip only)
+  function scrollStripToActive() {
+    if (window.innerWidth > 760 || !adv.activeId) return;
+    const pane = document.querySelector('.adv-graph-pane');
+    const idx = advancedSyllabus.modules.findIndex(m => m.id === adv.activeId);
+    if (pane && idx >= 0) {
+      const nodeX = 55 + idx * 95;
+      pane.scrollLeft = Math.max(0, nodeX - pane.clientWidth / 2);
+    }
+  }
+
   // ===========================================================
   // DETAIL PANE
   // ===========================================================
@@ -235,6 +277,7 @@
     adv.activeId = id;
     renderGraph();
     renderDetail();
+    scrollStripToActive();
   }
 
   // 點擊鎖定節點：顯示前置任務需求（對齊科目 A–F 的鎖定提示）
@@ -385,6 +428,8 @@
     if (isModuleLocked(adv.activeId)) showModuleLockWarning(adv.activeId);
     else renderDetail();
     modal.classList.add('active');
+    // Defer strip scroll until layout is painted
+    requestAnimationFrame(scrollStripToActive);
     window.lockScroll();
     store.set(FinStorage.KEYS.ADVANCED_SEEN, '1');
   }
