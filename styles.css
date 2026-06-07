@@ -1353,11 +1353,16 @@ footer a:hover {
   .modal-box {
     width: 100vw;
     max-width: 100vw;
-    /* --real-vh is set by JS via visualViewport.height — the only value that
-       reliably excludes Chrome iOS's persistent bottom toolbar. Falls back to
-       100svh (CSS small-viewport) for no-JS environments. */
+    /* --real-vh (visualViewport.height) handles Chrome iOS persistent bottom toolbar.
+       min() caps it at 100svh so a stale large-viewport --real-vh (Safari URL bar
+       hidden before modal opens) never pushes the footer off-screen.
+       Chrome iOS: --real-vh < 100svh → min picks --real-vh ✓
+       Safari URL-bar hidden: --real-vh > 100svh → min picks 100svh ✓
+       Safari URL-bar visible: equal → either works ✓ */
     height: var(--real-vh, 100svh);
+    height: min(var(--real-vh, 100svh), 100svh);
     max-height: var(--real-vh, 100svh);
+    max-height: min(var(--real-vh, 100svh), 100svh);
     border-radius: 0;
     margin: 0;
     transform: scale(1);

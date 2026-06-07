@@ -438,11 +438,12 @@
   .ai-modal-box {
     width: 100vw;
     max-width: 100vw;
-    /* --real-vh is set by visualViewport.height in app.js — the only value that
-       reliably excludes Chrome iOS's persistent bottom toolbar, fixing the missing
-       tab bar issue. Falls back to 100svh for no-JS environments. */
+    /* min() caps stale large-viewport --real-vh at 100svh so the tab bar is never
+       pushed off-screen when Safari's URL bar was hidden before the modal opened. */
     height: var(--real-vh, 100svh);
+    height: min(var(--real-vh, 100svh), 100svh);
     max-height: var(--real-vh, 100svh);
+    max-height: min(var(--real-vh, 100svh), 100svh);
     border-radius: 0;
     transform: none;
     transition: none;
