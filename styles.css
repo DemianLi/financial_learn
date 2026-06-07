@@ -445,6 +445,7 @@ header {
   justify-content: space-between;
   align-items: flex-start;
   background: rgba(15, 23, 42, 0.4);
+  flex-shrink: 0;
 }
 
 .detail-subject-badge {
@@ -858,6 +859,7 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .modal-close {
@@ -876,7 +878,14 @@ header {
 .modal-body {
   padding: 1.5rem;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   flex: 1;
+  /* Scroll-shadow: local gradients hide the shadow when flush at top/bottom */
+  background:
+    linear-gradient(var(--bg-secondary) 30%, rgba(12, 16, 32, 0))  center top    / 100% 2.5rem no-repeat local,
+    linear-gradient(rgba(12, 16, 32, 0), var(--bg-secondary) 70%) center bottom / 100% 4rem   no-repeat local,
+    radial-gradient(farthest-side at 50% 100%, rgba(6, 182, 212, 0.12), transparent) bottom / 100% 2rem no-repeat scroll;
+  background-color: var(--bg-secondary);
 }
 
 .modal-footer {
@@ -885,6 +894,7 @@ header {
   display: flex;
   justify-content: flex-end;
   gap: 0.8rem;
+  flex-shrink: 0;
 }
 
 /* Exam Mode Box Details */
@@ -1207,9 +1217,9 @@ footer a:hover {
     margin: 10px auto 0;
     flex-shrink: 0;
   }
-  /* detail-card 本身滾動 */
+  /* detail-card is the flex column container; detail-body handles scrolling */
   .detail-card {
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   /* --- Candidate B: Header 壓縮 --- */
