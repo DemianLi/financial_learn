@@ -926,6 +926,7 @@ header {
   padding: 1.5rem;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   flex: 1;
   /* Scroll-shadow: local gradients hide the shadow when flush at top/bottom */
   background:
@@ -1395,9 +1396,10 @@ footer a:hover {
     min-height: 100dvh;
     padding: 1rem;
   }
-  /* FinMind 沙盒代碼區塊：行動版移除固定高度，讓 modal 統一捲動 */
+  /* 代碼區塊自己捲動——不依賴 modal-body scroll（iOS overflow:hidden 父層干擾問題） */
   .sandbox-output-wrapper {
-    max-height: none;
-    overflow-y: visible;
+    max-height: 40vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
