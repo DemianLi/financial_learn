@@ -1375,7 +1375,28 @@ footer a:hover {
     min-height: 100dvh;
     padding: 1rem;
   }
-  /* overflow:clip 已解除 BFC 阻擋，代碼區塊展開讓 modal-body 統一捲動 */
+
+  /* 沙盒 modal：顯式 flex 結構確保 iOS Safari 捲動正常
+     iOS 不一定把 flex 演算法計算出的高度視為 definite height，
+     改為 modal-body 擔任 overflow:hidden 的 flex 容器，
+     sandbox-card 本身成為 flex:1 + overflow-y:auto 的捲動區，
+     與 exam-body-layout 的模式一致。 */
+  #sandboxModal .modal-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+  }
+  .sandbox-card {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+  /* 代碼區塊在卡片捲動的前提下展開顯示，不需要自己的捲動容器 */
   .sandbox-output-wrapper {
     max-height: none;
     overflow-y: visible;
