@@ -12,13 +12,7 @@
       document.head.appendChild(criticalStyle);
     }
 
-    // 1. Proactively inject custom CSS stylesheet to maintain HTML integrity
-    const styleLink = document.createElement('link');
-    styleLink.rel = 'stylesheet';
-    styleLink.href = 'aiSandbox.css';
-    document.head.appendChild(styleLink);
-
-    // 2. Locate header buttons and inject the launch button
+    // 1. Locate header buttons and inject the launch button
     const headerActions = document.querySelector('.header-actions');
     if (headerActions) {
       const btnAi = document.createElement('button');

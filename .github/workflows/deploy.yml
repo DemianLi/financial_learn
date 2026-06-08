@@ -28,6 +28,9 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v6
 
+      - name: Stamp asset version hash
+        run: sed -i "s/__HASH__/${GITHUB_SHA::7}/g" index.html
+
       - name: Remove non-web directories
         run: rm -rf .agents .claude
 
