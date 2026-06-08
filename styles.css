@@ -929,6 +929,7 @@ header {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   flex: 1;
+  min-height: 0; /* flex 預設 min-height:auto 會讓 body 撐到內容高度，overflow-y:auto 永遠不觸發；0 讓 flex-shrink 生效 */
   /* Scroll-shadow: local gradients hide the shadow when flush at top/bottom */
   background:
     linear-gradient(var(--bg-secondary) 30%, rgba(12, 16, 32, 0))  center top    / 100% 2.5rem no-repeat local,
