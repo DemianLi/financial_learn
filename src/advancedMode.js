@@ -19,13 +19,27 @@
   const adv = {
     // checks: { g1: [0,2,3], ... }  已勾選的檢核項 index
     checks: (function () {
+      // Migrate old count-only format { moduleId: N } → { moduleId: [0..N-1] }
+      function migrateChecks(obj) {
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
+        const out = {};
+        for (const [k, v] of Object.entries(obj)) {
+          if (typeof v === 'number') out[k] = Array.from({ length: v }, (_, i) => i);
+          else if (Array.isArray(v)) out[k] = v;
+        }
+        return out;
+      }
       try {
         const raw = store.get(FinStorage.KEYS.ADVANCED_CHECKS);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
         const sig = store.get(FinStorage.KEYS.ADVANCED_CHECKS_SIG);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (checksum(parsed) === sig) return parsed;
-        }
+        if (checksum(parsed) === sig) return parsed;
+        // Checksum mismatch (e.g. old format): migrate and re-save with fresh checksum
+        const migrated = migrateChecks(parsed);
+        store.set(FinStorage.KEYS.ADVANCED_CHECKS, JSON.stringify(migrated));
+        store.set(FinStorage.KEYS.ADVANCED_CHECKS_SIG, checksum(migrated));
+        return migrated;
       } catch (e) { /* fall through */ }
       return {};
     })(),

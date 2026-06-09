@@ -22,6 +22,8 @@ window.FinStorage = (function () {
     // #19/#21 - setup guide + research notes
     SETUP_DISMISSED:    'finmath_setup_dismissed',
     NOTE_PREFIX:        'finmath_note_',
+    // #8 - onboarding tour
+    ONBOARDING_DONE:    'finmath_onboarding_done',
   };
 
   function safeGet(key) {
