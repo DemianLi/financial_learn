@@ -212,19 +212,19 @@ const syllabusData = {
         "description": "建立可比公司估值矩陣。自動提取同業 GICS 分類與台股證交所分類，生成可比估值折溢價分析報告。"
       },
       "finmindCode": "import pandas as pd\nimport numpy as np\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n\npeers = ['2330', '2303', '2454']  # 台積電, 聯電, 聯發科\n\n# Step 1: 月營收 YoY 成長率（verified 欄位: revenue, revenue_year, revenue_month）\ngrowth_data = []\nfor stock in peers:\n    df_rev = dl.taiwan_stock_month_revenue(\n        stock_id=stock,\n        start_date='2023-01-01',\n        end_date='2024-12-31'\n    )\n    if df_rev.empty:\n        continue\n    annual = df_rev.groupby('revenue_year')['revenue'].sum()\n    if len(annual) >= 2:\n        yoy = (annual.iloc[-1] / annual.iloc[-2] - 1) * 100\n        growth_data.append({'stock_id': stock, 'yoy_growth_pct': round(yoy, 1)})\n\ndf_growth = pd.DataFrame(growth_data)\n\n# Step 2: 最新 PE（verified 欄位: PER, PBR, dividend_yield）\npe_data = []\nfor stock in peers:\n    df_pe = dl.taiwan_stock_per_pbr(stock_id=stock, start_date='2024-12-01')\n    if not df_pe.empty:\n        latest = df_pe.sort_values('date').iloc[-1]\n        pe_data.append({\n            'stock_id': stock,\n            'PER': round(latest['PER'], 1),\n            'PBR': round(latest['PBR'], 1)\n        })\n\ndf_pe_latest = pd.DataFrame(pe_data)\n\n# Step 3: 合併可比估值矩陣\ndf_comps = pd.merge(df_growth, df_pe_latest, on='stock_id')\nprint(\"同業可比估值矩陣（YoY成長 × P/E）:\")\nprint(df_comps.to_string(index=False))\n\n# Step 4: 建立成長-估值投影迴歸線（核心考點：P/E = a × 成長率 + b）\nif len(df_comps) >= 2:\n    x = df_comps['yoy_growth_pct'].values\n    y = df_comps['PER'].values\n    a, b = np.polyfit(x, y, 1)\n    print(f\"\\n迴歸直線: P/E = {a:.2f} × YoY成長% + {b:.2f}\")\n    tsmc = df_comps[df_comps['stock_id'] == '2330'].iloc[0]\n    fair_pe = a * tsmc['yoy_growth_pct'] + b\n    gap = tsmc['PER'] - fair_pe\n    verdict = '高估' if gap > 0 else '低估'\n    print(f\"台積電實際P/E: {tsmc['PER']}x，公允P/E: {fair_pe:.1f}x → 相對同業{verdict} {abs(gap):.1f}x\")",
-      "examQuestions": [        {
-          "question": "假設有三家晶圓代工同業的本益比（P/E）與預期營收成長率組成的二維向量分別為：公司甲 $\\mathbf{u}_1 = [25, 20\\%]^T$，公司乙 $\\mathbf{u}_2 = [18, 12\\%]^T$，公司丙 $\\mathbf{u}_3 = [15, 8\\%]^T$。這三點在二維平面上呈現極佳的線性關係，建構出一條「成長估值投影線」 $P/E = 100 \\times 成長率 + 6$。若目標公司丁的預期營收成長率為 15%，根據同業多維特徵投影線，公司丁的合理 P/E 應為多少倍？",
-          "options": [
+      "examQuestions": [
+        {
+          "question": "假設有三家晶圓代工同業的本益比（P/E）與預期營收成長率組成的二維向量分別為：公司甲 $\\mathbf{u}_1 = [25, 20\\%]^T$，公司乙 $\\mathbf{u}_2 = [18, 12\\%]^T$，公司丙 $\\mathbf{u}_3 = [15, 8\\%]^T$。這三點在二維平面上呈現極佳的線性關係，建構出一條「成長估值投影線」 $P/E = 100 \\times \\text{成長率} + 6$。若目標公司丁的預期營收成長率為 15%，根據同業多維特徵投影線，公司丁的合理 P/E 應為多少倍？",          "options": [
             "合理 P/E = 15 倍",
             "合理 P/E = 21 倍",
             "合理 P/E = 18 倍",
             "合理 P/E = 23.5 倍"
           ],
-          "explanation": "1. 同業的特徵高度線性相關，勾勒出一條估值投影線：$P/E = 100 \\times 成長率 + 6$。\\n2. 目標公司丁的成長率為 15%（即 0.15）。\\n3. 代入投影線公式計算其合理本益比：\\n   $P/E = 100 \\times 0.15 + 6 = 15 + 6 = 21$ 倍。\\n4. 故目標公司的合理 P/E 應為 21 倍，對應選項 (2)。",
+          "explanation": "1. 同業的特徵高度線性相關，勾勒出一條估值投影線：$P/E = 100 \\times \\text{成長率} + 6$。\\n2. 目標公司丁的成長率為 15%（即 0.15）。\\n3. 代入投影線公式計算其合理本益比：\\n   $P/E = 100 \\times 0.15 + 6 = 15 + 6 = 21$ 倍。\\n4. 故目標公司的合理 P/E 應為 21 倍，對應選項 (2)。",
           "answerHash": "4fh771"
         },
         {
-          "question": "在評估高科技成長股時，分析師建立了一條「成長估值投影回歸線」：$P/E = 120 \\times 營收成長率 + 5$。現有一家新上市的 IC 設計公司，預估其營收成長率可達 18%。根據此一多維特徵投影公式，該公司的合理本益比（P/E）應投射為多少倍？",
+          "question": "在評估高科技成長股時，分析師建立了一條「成長估值投影回歸線」：$P/E = 120 \\times \\text{營收成長率} + 5$。現有一家新上市的 IC 設計公司，預估其營收成長率可達 18%。根據此一多維特徵投影公式，該公司的合理本益比（P/E）應投射為多少倍？",
           "options": [
             "合理 P/E = 26.6 倍",
             "合理 P/E = 20 倍",
