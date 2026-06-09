@@ -1360,8 +1360,8 @@ footer a:hover {
   .formula-container {
     display: block;
     text-align: center;
-    min-height: auto;
-    padding: 1.5rem 1rem;
+    min-height: 280px; /* 桌機 140px × 2 */
+    padding: 3rem 1rem; /* 桌機 2.4rem × 2 */
   }
   /* 模擬考全螢幕：答題選項縱向排列 */
   .options-grid {
