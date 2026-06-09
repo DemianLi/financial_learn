@@ -4,10 +4,9 @@
 (function () {
   'use strict';
 
-  // Don't run if user has already seen the tour
   if (FinStorage.safeGet(FinStorage.KEYS.ONBOARDING_DONE) === '1') return;
 
-  // Don't run if the user already has existing progress (returning user with old data)
+  // Skip for returning users who already have progress data
   const hasProgress = (function () {
     const completed = FinStorage.getCompletedTopics();
     if (completed && completed.length > 0) return true;
@@ -19,24 +18,27 @@
     return;
   }
 
+  // All three targets must be visible at tour start.
+  // #detailCard lives inside .panel-right which is translateX(100%) / visibility:hidden
+  // at page load — never use it as a spotlight target.
   const STEPS = [
     {
       selector: '.map-card',
       title: '互動學習地圖',
-      body: '點擊任一章節節點（A–F），展開該章節的知識大綱與題目。',
+      body: '點擊任一章節節點（A–F），右側面板會展開知識大綱、考題與實戰程式碼。',
       position: 'right'
     },
     {
-      selector: '#detailCard',
-      title: '答題闖關',
-      body: '答對題目即可完成章節。每章都有比喻直覺、考點與實戰程式碼供學習。',
-      position: 'left'
+      selector: '#progressCard',
+      title: '學習進度儀表板',
+      body: '答對題目即完成章節，進度即時更新。提交微產出作業可取得雙證據，解鎖下一章節。',
+      position: 'right'
     },
     {
-      selector: '#progressCard',
-      title: '雙證據解鎖制',
-      body: '提交微產出作業後，連同答題通關可取得雙證據，解鎖下一章節。',
-      position: 'left'
+      selector: '.header-actions',
+      title: '更多工具',
+      body: '可隨時進入學力模擬考，完成 A–F 全部章節後還會解鎖機構研究員進階模式。',
+      position: 'below'
     }
   ];
 
@@ -45,17 +47,14 @@
   // ── DOM ──────────────────────────────────────────────────────────────
   const overlay = document.createElement('div');
   overlay.id = 'onboardingOverlay';
-  overlay.style.cssText = [
-    'position:fixed', 'inset:0', 'z-index:9000',
-    'pointer-events:none'
-  ].join(';');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9000;pointer-events:none';
 
   const spotlight = document.createElement('div');
   spotlight.id = 'onboardingSpotlight';
   spotlight.style.cssText = [
     'position:fixed', 'border-radius:10px',
     'box-shadow:0 0 0 9999px rgba(0,0,0,0.65)',
-    'transition:top .35s ease,left .35s ease,width .35s ease,height .35s ease',
+    'transition:top .3s ease,left .3s ease,width .3s ease,height .3s ease',
     'pointer-events:none', 'z-index:9001'
   ].join(';');
 
@@ -65,10 +64,10 @@
     'position:fixed', 'z-index:9002', 'pointer-events:auto',
     'background:#1a1a2e', 'border:1px solid #00ff88',
     'border-radius:10px', 'padding:1.1rem 1.25rem',
-    'max-width:300px', 'min-width:220px',
+    'width:290px',
     'box-shadow:0 8px 32px rgba(0,255,136,0.15)',
     'font-family:sans-serif', 'color:#e0e0e0',
-    'transition:top .35s ease,left .35s ease'
+    'transition:top .3s ease,left .3s ease'
   ].join(';');
 
   function buildTooltipHTML(step, idx, total) {
@@ -96,11 +95,11 @@
       </div>`;
   }
 
-  function getRect(selector) {
-    const el = document.querySelector(selector);
-    if (!el) return null;
+  // PAD around the highlighted element
+  const PAD = 8;
+
+  function getRect(el) {
     const r = el.getBoundingClientRect();
-    const PAD = 8;
     return {
       top:    r.top    - PAD,
       left:   r.left   - PAD,
@@ -113,45 +112,73 @@
     };
   }
 
-  function positionTooltip(rect, position) {
-    const TW = 310, TH = 180;
-    const vw = window.innerWidth, vh = window.innerHeight;
+  // Estimate tooltip height at 290px width (title + body + buttons)
+  const TW = 290;
+  const TH = 210;
+  const M  = 12; // margin from element / viewport edge
+
+  function positionTooltip(rect) {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const canRight = rect.right  + TW + M <= vw;
+    const canLeft  = rect.left   - TW - M >= 0;
+    const canBelow = rect.bottom + TH + M <= vh;
+    const canAbove = rect.top    - TH - M >= 0;
+
     let top, left;
 
-    if (position === 'right' && rect.right + TW + 16 <= vw) {
-      left = rect.right + 12;
-      top  = Math.max(12, Math.min(rect.top, vh - TH - 12));
-    } else if (position === 'left' && rect.left - TW - 12 >= 0) {
-      left = rect.left - TW - 12;
-      top  = Math.max(12, Math.min(rect.top, vh - TH - 12));
+    if (canRight) {
+      left = rect.right + M;
+      top  = clamp(rect.top, M, vh - TH - M);
+    } else if (canLeft) {
+      left = rect.left - TW - M;
+      top  = clamp(rect.top, M, vh - TH - M);
+    } else if (canBelow) {
+      top  = rect.bottom + M;
+      left = clamp(rect.cx - TW / 2, M, vw - TW - M);
+    } else if (canAbove) {
+      top  = rect.top - TH - M;
+      left = clamp(rect.cx - TW / 2, M, vw - TW - M);
     } else {
-      // Fallback: below the element, centred
-      top  = Math.min(rect.bottom + 12, vh - TH - 12);
-      left = Math.max(12, Math.min(rect.cx - TW / 2, vw - TW - 12));
+      // Last resort: centre in viewport
+      top  = clamp((vh - TH) / 2, M, vh - TH - M);
+      left = clamp((vw - TW) / 2, M, vw - TW - M);
     }
 
     tooltip.style.top  = top  + 'px';
     tooltip.style.left = left + 'px';
   }
 
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(v, hi)); }
+
   function render(idx) {
     const step = STEPS[idx];
-    const rect = getRect(step.selector);
-    if (!rect) { finish(); return; }
+    const el = document.querySelector(step.selector);
+    if (!el) { finish(); return; }
 
-    spotlight.style.top    = rect.top    + 'px';
-    spotlight.style.left   = rect.left   + 'px';
-    spotlight.style.width  = rect.width  + 'px';
-    spotlight.style.height = rect.height + 'px';
+    // Scroll element into view (matters on mobile/tablet where page scrolls).
+    // On desktop the page is overflow:hidden so this is a no-op.
+    el.scrollIntoView({ block: 'nearest', behavior: 'instant' });
 
-    positionTooltip(rect, step.position);
-    tooltip.innerHTML = buildTooltipHTML(step, idx, STEPS.length);
+    // Wait one frame so layout reflects the scroll before we read coords.
+    requestAnimationFrame(function () {
+      const rect = getRect(el);
 
-    document.getElementById('ob-next').onclick = function () {
-      if (idx + 1 < STEPS.length) { current = idx + 1; render(current); }
-      else finish();
-    };
-    document.getElementById('ob-skip').onclick = finish;
+      spotlight.style.top    = rect.top    + 'px';
+      spotlight.style.left   = rect.left   + 'px';
+      spotlight.style.width  = rect.width  + 'px';
+      spotlight.style.height = rect.height + 'px';
+
+      positionTooltip(rect);
+      tooltip.innerHTML = buildTooltipHTML(step, idx, STEPS.length);
+
+      document.getElementById('ob-next').onclick = function () {
+        if (idx + 1 < STEPS.length) { current = idx + 1; render(current); }
+        else finish();
+      };
+      document.getElementById('ob-skip').onclick = finish;
+    });
   }
 
   function finish() {
@@ -168,7 +195,6 @@
     render(0);
   }
 
-  // Wait for the page to fully render before starting
   window.addEventListener('load', function () {
     setTimeout(start, 800);
   });
