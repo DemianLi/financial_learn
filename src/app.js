@@ -1136,8 +1136,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // #17: Template with {{label}} → input fields
     const templateHtml = md.template ? (() => {
+      let tIdx = 0;
       const filled = md.template.replace(/\{\{([^}]+)\}\}/g, (_, label) =>
-        `<input type="text" class="thesis-input" placeholder="${label}" title="${label}"
+        `<input type="text" name="thesis-field-${tIdx++}" class="thesis-input" placeholder="${label}" title="${label}" autocomplete="off"
           style="display:inline-block; min-width:80px; max-width:150px; background:rgba(0,0,0,0.3);
           border:0; border-bottom:1px dashed var(--subject-b); color:var(--text-primary);
           font-size:0.82rem; padding:0.1rem 0.3rem; border-radius:2px; margin:0 0.1rem;">`
