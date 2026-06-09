@@ -766,7 +766,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return (topic.finmindCode || '').replace(/stock_id\s*=\s*['"][^'"]*['"]/g, `stock_id='${stockId}'`);
     }
     const codePre = codeSection.querySelector('.code-wrapper pre code');
-    if (codePre) codePre.textContent = getCodeWithStock(savedStock);
+    function applyCode(stockId) {
+      if (!codePre) return;
+      codePre.innerHTML = PythonHighlighter.highlight(getCodeWithStock(stockId));
+    }
+    applyCode(savedStock);
 
     const btnCopy = codeSection.querySelector('.btn-copy');
     if (btnCopy) {
@@ -796,7 +800,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnApply.onclick = () => {
         const newId = stockInput.value.trim() || '2330';
         sessionStorage.setItem('finmath_stock_id', newId);
-        codePre.textContent = getCodeWithStock(newId);
+        applyCode(newId);
       };
       stockInput.addEventListener('keydown', e => { if (e.key === 'Enter') btnApply.click(); });
     }
