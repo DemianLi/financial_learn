@@ -766,7 +766,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return (topic.finmindCode || '').replace(/stock_id\s*=\s*['"][^'"]*['"]/g, `stock_id='${stockId}'`);
     }
     const codePre = codeSection.querySelector('.code-wrapper pre code');
-    if (codePre) codePre.textContent = getCodeWithStock(savedStock);
+    function applyCode(stockId) {
+      if (!codePre) return;
+      codePre.innerHTML = PythonHighlighter.highlight(getCodeWithStock(stockId));
+    }
+    applyCode(savedStock);
 
     const btnCopy = codeSection.querySelector('.btn-copy');
     if (btnCopy) {
@@ -796,7 +800,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnApply.onclick = () => {
         const newId = stockInput.value.trim() || '2330';
         sessionStorage.setItem('finmath_stock_id', newId);
-        codePre.textContent = getCodeWithStock(newId);
+        applyCode(newId);
       };
       stockInput.addEventListener('keydown', e => { if (e.key === 'Enter') btnApply.click(); });
     }
@@ -1129,7 +1133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // #16: Checklist items HTML
     const checklistItems = (md.checklist || []).map((item, i) =>
       `<label style="display:flex; align-items:flex-start; gap:0.5rem; cursor:pointer; font-size:0.82rem; line-height:1.5; padding:0.3rem 0;">
-        <input type="checkbox" class="deliverable-check" data-idx="${i}" style="margin-top:0.2rem; accent-color:var(--subject-a); flex-shrink:0;">
+        <input type="checkbox" name="deliverable-check-${i}" class="deliverable-check" data-idx="${i}" autocomplete="off" style="margin-top:0.2rem; accent-color:var(--subject-a); flex-shrink:0;">
         <span>${item}</span>
       </label>`
     ).join('');
@@ -1721,6 +1725,12 @@ print(df[['date', 'title']].tail(5))
   }
 
   // --- MATH FORMULA TEXT REPLACEMENT HELPER ---
+  // Wraps bare CJK characters in \text{} before KaTeX sees them.
+  // Negative lookbehind skips chars already inside a brace argument (e.g. \text{已有}).
+  function wrapChineseInText(formula) {
+    return formula.replace(/(?<!\{)([一-鿿㐀-䶿豈-﫿]+)/g, '\\text{$1}');
+  }
+
   function formatMathText(text) {
     if (!text) return '';
     
@@ -1728,7 +1738,7 @@ print(df[['date', 'title']].tail(5))
       // 1. Parse Block Math $$...$$
       let processed = text.replace(/\$\$(.*?)\$\$/gs, (match, formula) => {
         try {
-          return `<div class="formula-block">${window.katex.renderToString(formula, { displayMode: true, throwOnError: false })}</div>`;
+          return `<div class="formula-block">${window.katex.renderToString(wrapChineseInText(formula), { displayMode: true, throwOnError: false })}</div>`;
         } catch (e) {
           console.error("KaTeX block rendering error:", e);
           return `<div class="formula-block">${formula}</div>`;
@@ -1738,7 +1748,7 @@ print(df[['date', 'title']].tail(5))
       // 2. Parse Inline Math $...$
       processed = processed.replace(/\$(.*?)\$/gs, (match, formula) => {
         try {
-          return window.katex.renderToString(formula, { displayMode: false, throwOnError: false });
+          return window.katex.renderToString(wrapChineseInText(formula), { displayMode: false, throwOnError: false });
         } catch (e) {
           console.error("KaTeX inline rendering error:", e);
           return `<code class="formula-inline">${formula}</code>`;
