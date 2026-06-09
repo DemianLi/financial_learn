@@ -1100,6 +1100,15 @@ footer a:hover {
   text-decoration: underline;
 }
 
+/* Disclaimer span — base styles (was inline) */
+footer .footer-disclaimer {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-top: 0.4rem;
+}
+
 /* Responsive Breakpoints */
 @media (max-width: 1024px) {
   .dashboard-grid {
@@ -1403,5 +1412,33 @@ footer a:hover {
   .sandbox-output-wrapper {
     max-height: none;
     overflow-y: visible;
+  }
+
+  /* ── 手機版 Footer ─────────────────────────────── */
+  footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.55rem;
+    text-align: left;
+    padding-top: 1.4rem;
+    margin-top: 1.4rem;
+  }
+  footer .footer-credit {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+  }
+  footer .footer-links {
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+  footer .footer-disclaimer {
+    margin-top: 0;
+    padding: 0.6rem 0.75rem;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: 0 6px 6px 0;
+    font-size: 0.73rem;
+    line-height: 1.65;
   }
 }
