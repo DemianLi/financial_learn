@@ -367,7 +367,7 @@ const syllabusData = {
         "name": "morning-note",
         "description": "每日晨會晨報產出。利用聯立方程解析隔夜美股 ADR 與三大法人最新籌碼向量，給出當日多空策略向量。"
       },
-      "finmindCode": "import pandas as pd\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n\n# 獲取台積電的法人買賣超數據\ndf_inst = dl.taiwan_stock_institutional_investors(\n    stock_id='2330',\n    start_date='2025-01-01',\n    end_date='2025-12-31'\n)\n\n# 整理數據：將三大法人每日的買賣超淨額整理為特徵向量\ndf_pivot = df_inst.pivot_table(\n    index='date', \n    columns='name', \n    values='buy',\n    aggfunc='sum'\n).reset_index()\n\nprint(\"三大法人每日買進強度向量空間:\")\nprint(df_pivot.tail())",
+      "finmindCode": "import pandas as pd\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n\n# 獲取台積電的法人買賣超數據\ndf_inst = dl.taiwan_stock_institutional_investors(\n    stock_id='2330',\n    start_date='2025-01-01',\n    end_date='2025-12-31'\n)\n\n# 計算淨買賣超 = buy - sell（正=買超，負=賣超）\ndf_inst['net'] = df_inst['buy'] - df_inst['sell']\n\n# 整理為特徵向量矩陣：每列為一天，每欄為一法人\ndf_pivot = df_inst.pivot_table(\n    index='date',\n    columns='name',\n    values='net',\n    aggfunc='sum'\n).reset_index()\n\n# 三大法人合計淨買超\ndf_pivot['合計'] = df_pivot.iloc[:, 1:].sum(axis=1)\n\nprint(\"三大法人每日淨買賣超向量空間（近20日）:\")\nprint(df_pivot.tail(20))\nprint(f\"\\n近20日合計淨買超: {df_pivot['合計'].tail(20).sum():.0f} 張\")",
       "examQuestions": [
         {
           "question": "假設某中型電子股的每日股價漲跌幅 $Y$（%）可以由三大法人的淨買賣超向量 $\\mathbf{x} = [外資, 投信, 自營商]^T$（單位：億元）線性組合表示，方程式為 $Y = 0.5x_1 + 1.2x_2 - 0.3x_3 + 0.1$。今日外資買超 10 億元，自營商賣超（即買超為負）5 億元。若今日股價收盤恰好持平（即 $Y = 0$），試問在線性方程約束下，投信今日的淨買賣超金額 $x_2$ 應為多少億元？",
