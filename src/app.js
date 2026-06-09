@@ -1133,7 +1133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // #16: Checklist items HTML
     const checklistItems = (md.checklist || []).map((item, i) =>
       `<label style="display:flex; align-items:flex-start; gap:0.5rem; cursor:pointer; font-size:0.82rem; line-height:1.5; padding:0.3rem 0;">
-        <input type="checkbox" class="deliverable-check" data-idx="${i}" style="margin-top:0.2rem; accent-color:var(--subject-a); flex-shrink:0;">
+        <input type="checkbox" name="deliverable-check-${i}" class="deliverable-check" data-idx="${i}" autocomplete="off" style="margin-top:0.2rem; accent-color:var(--subject-a); flex-shrink:0;">
         <span>${item}</span>
       </label>`
     ).join('');
@@ -1141,7 +1141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // #17: Template with {{label}} → input fields
     const templateHtml = md.template ? (() => {
       const filled = md.template.replace(/\{\{([^}]+)\}\}/g, (_, label) =>
-        `<input type="text" class="thesis-input" placeholder="${label}" title="${label}"
+        `<input type="text" name="thesis-${label.replace(/\s+/g, '-')}" class="thesis-input" placeholder="${label}" title="${label}" autocomplete="off"
           style="display:inline-block; min-width:80px; max-width:150px; background:rgba(0,0,0,0.3);
           border:0; border-bottom:1px dashed var(--subject-b); color:var(--text-primary);
           font-size:0.82rem; padding:0.1rem 0.3rem; border-radius:2px; margin:0 0.1rem;">`
