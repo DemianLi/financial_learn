@@ -1351,18 +1351,20 @@ footer a:hover {
   .modal-overlay.active .modal-box {
     transform: scale(1);
   }
-  /* KaTeX 公式允許橫向捲動，垂直方向必須 visible 否則 KaTeX descender 被裁切 */
+  /* KaTeX display 讓外層 formula-container 負責橫向捲動，自身不建立捲動容器 */
   .katex-display {
-    overflow-x: auto;
+    overflow-x: visible;
     overflow-y: visible;
   }
-  /* formula-container 在手機改為 block，避免 flex 壓縮 KaTeX 寬度計算 */
+  /* formula-container 在手機改為 block，單一橫向捲動容器 */
   .formula-container {
     display: block;
     text-align: center;
-    min-height: auto;
+    min-height: 180px;
     padding: 1.5rem 1rem;
-    font-size: 1.6rem; /* 桌機 1.2rem → 手機放大，KaTeX 等比例縮放 */
+    font-size: 1.2rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   /* 模擬考全螢幕：答題選項縱向排列 */
   .options-grid {
