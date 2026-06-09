@@ -1720,6 +1720,12 @@ print(df[['date', 'title']].tail(5))
   }
 
   // --- MATH FORMULA TEXT REPLACEMENT HELPER ---
+  // Wraps bare CJK characters in \text{} before KaTeX sees them.
+  // Negative lookbehind skips chars already inside a brace argument (e.g. \text{已有}).
+  function wrapChineseInText(formula) {
+    return formula.replace(/(?<!\{)([一-鿿㐀-䶿豈-﫿]+)/g, '\\text{$1}');
+  }
+
   function formatMathText(text) {
     if (!text) return '';
     
@@ -1727,7 +1733,7 @@ print(df[['date', 'title']].tail(5))
       // 1. Parse Block Math $$...$$
       let processed = text.replace(/\$\$(.*?)\$\$/gs, (match, formula) => {
         try {
-          return `<div class="formula-block">${window.katex.renderToString(formula, { displayMode: true, throwOnError: false })}</div>`;
+          return `<div class="formula-block">${window.katex.renderToString(wrapChineseInText(formula), { displayMode: true, throwOnError: false })}</div>`;
         } catch (e) {
           console.error("KaTeX block rendering error:", e);
           return `<div class="formula-block">${formula}</div>`;
@@ -1737,7 +1743,7 @@ print(df[['date', 'title']].tail(5))
       // 2. Parse Inline Math $...$
       processed = processed.replace(/\$(.*?)\$/gs, (match, formula) => {
         try {
-          return window.katex.renderToString(formula, { displayMode: false, throwOnError: false });
+          return window.katex.renderToString(wrapChineseInText(formula), { displayMode: false, throwOnError: false });
         } catch (e) {
           console.error("KaTeX inline rendering error:", e);
           return `<code class="formula-inline">${formula}</code>`;
