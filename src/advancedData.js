@@ -29,7 +29,7 @@ const advancedSyllabus = {
       objectives: [
         "能寫出 DCF 估值的九步驟流程（取數 → WACC → 預測 → 終值 → 折現 → 敏感度 → 交叉驗證 → 執行摘要 → 輸出）。",
         "理解 initiating-coverage 五階段：公司研究 → 財務建模 → 估值分析 → 圖表生成 → 報告組裝。",
-        "把『一個比喻』改寫成『一份可交接給同事接手的步驟清單』。"
+        "把『一個比喻』改寫成『一份下次自己能重現的步驟清單』——每步標明輸入資料、執行動作、輸出格式，六個月後不看原始代碼也能重跑。"
       ],
       finmindCode: "import pandas as pd\nfrom FinMind.data import DataLoader\n\n# 流程第 1 步：取數（SOP 的起點不是公式，而是可重現的資料管線）\ndl = DataLoader()\nfin = dl.taiwan_stock_financial_statement(stock_id='2330', start_date='2022-01-01')\nfin_pivot = fin.pivot_table(index='date', columns='type', values='value', aggfunc='first')\n\n# 流程第 2 步：定義一份可重複呼叫的『取數函式』（SOP 化的關鍵）\ndef load_fundamentals(stock_id, start='2022-01-01'):\n    df = dl.taiwan_stock_financial_statement(stock_id=stock_id, start_date=start)\n    return df.pivot_table(index='date', columns='type', values='value', aggfunc='first')\n\n# 流程第 3 步：把每一步輸出存成中間檔，讓流程可追溯、可交接\nfin_pivot.to_csv('step1_fundamentals_2330.csv')\nprint('✅ 已把「取數」這一步 SOP 化，下一步：WACC 計算')",
       checklist: [
@@ -95,7 +95,7 @@ const advancedSyllabus = {
       title: "端到端估值建模",
       icon: "📐",
       x: 420, y: 230,
-      gap: "真正的 comps / DCF 要算 WACC、台灣公債無風險利率、市場風險溢酬、敏感度分析，並輸出可審計的模型。原網站只有 keyFormula 與片段程式碼，沒有從假設到輸出的完整模型。",
+      gap: "B2 章節已教 WACC 公式推導、台灣公債無風險利率與 DCF 敏感度的數學邏輯；G4 的角色是把這些數學跑進一個端到端的工作流：從 FinMind 取真實財報數據、建立三大報表連動的預測模型、計算 FCF、輸出可審計的敏感度矩陣。B2 教你「算得出來」，G4 教你「建得出一個可重現、可交付的完整模型」。",
       skill: {
         name: "dcf-model / 3-statement-model",
         plugin: "Core",
@@ -170,14 +170,14 @@ const advancedSyllabus = {
       title: "在地監理與合規素養",
       icon: "⚖️",
       x: 150, y: 530,
-      gap: "機構研究員受金管會規範、研究獨立性與利益衝突管理約束。原網站把台灣 IFRS 科目、月營收公告時程（每月 10 日前）、除權息這些在地化只當成程式碼註解，沒有當成必修的制度知識。",
+      gap: "本模組主要適用於準備進入賣方研究機構的學習者；個人投資者亦可參考，重點在建立研究立場的透明度習慣。機構研究員受金管會規範、研究獨立性與利益衝突管理約束。原網站把台灣 IFRS 科目、月營收公告時程（每月 10 日前）、除權息這些在地化只當成程式碼註解，沒有當成必修的制度知識。",
       skill: {
         name: "client-review（合規檢核）+ 在地化參數層",
         plugin: "wealth-management Add-on（概念）",
         desc: "把利益衝突揭露、研究獨立性、適合度與在地法規參數納入工作流。"
       },
       objectives: [
-        "理解研究報告的利益衝突揭露與研究獨立性要求。",
+        "理解研究報告的利益衝突揭露要求（機構）；養成在個人研究中聲明立場的透明度習慣（個人）。",
         "掌握台灣在地時間節點：月營收（每月 10 日前）、除權息季、季報公告。",
         "把美規數據源（SEC/EDGAR）對應替換為公開資訊觀測站／TEJ。"
       ],
@@ -229,14 +229,14 @@ const advancedSyllabus = {
       objectives: [
         "認識 FinMind 與機構級數據商（FactSet/S&P/TEJ/Bloomberg）的差異與限制。",
         "用快取/批次設計繞過 API 限速，建立可規模化的資料管線。",
-        "理解 MCP Connector 如何把外部數據源接進分析工作流。"
+        "列出 FinMind 缺少的關鍵資料類別，並對應台灣可用的低成本替代來源（TEJ、CMONEY、公開資訊觀測站、台灣證交所開放資料）。"
       ],
-      finmindCode: "import time\nimport pandas as pd\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n# 面對 FinMind 限速（300/600 次/hr），用快取 + 批次設計模擬機構級管線\nclass CachedLoader:\n    def __init__(self):\n        self.cache = {}\n    def revenue(self, sid):\n        if sid in self.cache:\n            return self.cache[sid]            # 命中快取，不浪費 API 額度\n        df = dl.taiwan_stock_month_revenue(stock_id=sid, start_date='2024-01-01')\n        self.cache[sid] = df\n        time.sleep(0.2)                       # 節流，避免觸發限速\n        return df\n\nloader = CachedLoader()\nfor sid in ['2330', '2303', '2454']:\n    df = loader.revenue(sid)\n    print(sid, '→', len(df), '筆（已快取，可規模化）')\nprint('💡 機構級差異：FactSet/Bloomberg 無此限速，且含估值共識與逐字稿')",
+      finmindCode: "import time\nimport pandas as pd\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n# 面對 FinMind 限速（300/600 次/hr），用快取 + 批次設計模擬機構級管線\nclass CachedLoader:\n    def __init__(self):\n        self.cache = {}\n    def revenue(self, sid):\n        if sid in self.cache:\n            return self.cache[sid]            # 命中快取，不浪費 API 額度\n        df = dl.taiwan_stock_month_revenue(stock_id=sid, start_date='2024-01-01')\n        self.cache[sid] = df\n        time.sleep(0.2)                       # 節流，避免觸發限速\n        return df\n\nloader = CachedLoader()\nfor sid in ['2330', '2303', '2454']:\n    df = loader.revenue(sid)\n    print(sid, '→', len(df), '筆（已快取，可規模化）')\nprint('💡 機構級差異：FactSet/Bloomberg 無此限速，且含估值共識與逐字稿')\nprint('💡 台灣替代選項：TEJ 含估值共識與財務預測；CMONEY 含法說摘要；MOPS 含重大訊息；台灣證交所 OpenAPI 含交易統計')",
       checklist: [
         "寫一個帶快取的 FinMind 載入器，避免重複呼叫",
         "列出 FinMind 缺、但機構數據商有的 3 類資料",
         "設計一個批次拉取多檔標的的節流流程",
-        "說明 MCP Connector 在工作流中的角色（一段話）"
+        "為你的分析工作流建立一張『數據來源地圖』：列出每類所需資料、FinMind 是否提供、若不提供則用哪個台灣來源補足（TEJ/CMONEY/MOPS/證交所 OpenAPI）"
       ]
     },
     {
@@ -259,9 +259,9 @@ const advancedSyllabus = {
       finmindCode: "# 協作收尾：把 G1–G9 的產出組裝成一份 IC Memo 骨架（Markdown）\nic_memo = '''\n# 投資委員會備忘錄（IC Memo）｜2330 台積電\n\n## 1. 投資建議\n- 結論：______（買進/持有/賣出）｜目標價：______｜時間：______\n\n## 2. 投資論點（來自 G3）\n- ______\n\n## 3. 估值（來自 G4）\n- DCF：EV ≈ ______｜WACC：______｜敏感度區間：______\n\n## 4. 催化劑與時程（來自 G8）\n- ______\n\n## 5. 風險與反方觀點\n- ______\n\n## 6. 合規揭露（來自 G7）\n- ______\n'''\nwith open('ic_memo_2330.md', 'w', encoding='utf-8') as f:\n    f.write(ic_memo)\nprint('✅ 已產出 IC Memo 骨架，等待團隊 QC 與答辯')",
       checklist: [
         "把 G1–G9 的產出整合成一份 IC Memo",
-        "找一位同儕對你的成品做 QC（數字一致性、敘述對齊）",
-        "用 60 秒口頭 pitch 你的結論並接受一輪提問",
-        "根據回饋修訂成品至少一次"
+        "找一位同儕對你的成品做 QC（數字一致性、敘述對齊）（若無同儕，可將成品貼入 AI 工具並提示『請以機構審查者角色挑出數字不一致與敘述矛盾之處』）",
+        "用 60 秒口頭 pitch 你的結論並接受一輪提問（可對著錄音設備錄下 60 秒說明，回放後自評：論點是否清楚、數字是否說出口）",
+        "根據回饋修訂成品至少一次（基於 AI QC 或自我錄音回饋，至少修改一個數字或一句結論措辭）"
       ]
     }
   ],
