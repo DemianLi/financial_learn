@@ -1507,7 +1507,7 @@ document.addEventListener('DOMContentLoaded', () => {
     examCard.className = 'exam-question-card';
     examCard.innerHTML = `
       <div class="exam-q-header">
-        <span class="exam-badge" style="background:var(--subject-d)">Question ${idx + 1} of 5</span>
+        <span class="exam-badge" style="background:var(--subject-d)">Q ${idx + 1} of 5</span>
         <span style="font-size:0.8rem; color:var(--text-muted)">Subject: ${syllabusData.subjects[mockQ.subject].title}</span>
       </div>
       <div class="exam-q-scroll">
