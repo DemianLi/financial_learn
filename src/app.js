@@ -63,34 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { /* ignore */ }
   }
 
-  // --- CURRICULUM DEPENDENCIES MAP ---
-  const prerequisites = {
-    'a2': ['a1'],
-    'a3': ['a2'],
-    'b1': ['a1'],
-    'b2': ['b1', 'a3'], // DCF needs Comps and OCF/FCF
-    'b3': ['b2'],
-    'c1': ['b1'],      // Weights need Valuation Multipliers
-    'c2': ['c1'],
-    'c3': ['c2'],
-    'd1': ['c1'],
-    'd2': ['d1', 'c3'], // Bayesian needs sentimental NLP and Chips
-    'd3': ['d2'],
-    'e1': ['b3'],      // CAPM Beta needs industry bases
-    'e2': ['e1'],      // Sharpe matrix needs CAPM inputs
-    'e3': ['e2', 'c2'], // VaR / MDD needs Sharpe portfolio and Credit leverage
-    'f1': ['e3'],      // Taiwan Stock Impulse needs VaR risk completed
-    'f2': ['f1', 'd3'], // Bayesian Guidance needs F1 impulse and D3 catalysts
-    'f3': ['f2', 'c3']  // Leverage feedback needs Bayesian guidance and shareholding concentration
-  };
-
   function isTopicLocked(topicId) {
-    const prereqs = prerequisites[topicId];
-    if (!prereqs) return false;
-    for (const prereq of prereqs) {
-      if (!state.completedTopics.includes(prereq)) {
-        return true;
-      }
+    for (const prereq of CurriculumQuery.getPrereqs(topicId)) {
+      if (!state.completedTopics.includes(prereq)) return true;
     }
     return false;
   }
@@ -109,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     topicQuestionIndices: {}
   };
 
-  MasteryStore.init(syllabusData.topics, function () {
+  MasteryStore.init(CurriculumQuery.allTopics(), function () {
     state.completedTopics = MasteryStore.getCompletedTopics();
     updateProgressUI();
     renderRadarChart();
@@ -405,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- LOCKED NODE DETAILS PANEL RENDERER ---
   function showLockWarning(topicId) {
-    const topicData = syllabusData.topics.find(t => t.id === topicId);
+    const topicData = CurriculumQuery.getTopic(topicId);
     if (!topicData) return;
 
     state.activeTopic = topicData;
@@ -431,8 +406,8 @@ document.addEventListener('DOMContentLoaded', () => {
           本學習地圖採用**循序漸進的量化分析考綱架構**。在您進入「${topicData.title}」的知識空間前，您必須先學完並通關以下前置任務科目以建立扎實的代數與財務直覺：
         </p>
         <div style="display:flex; flex-direction:column; gap:0.5rem;">
-          ${prerequisites[topicId].map(pId => {
-            const pTopic = syllabusData.topics.find(t => t.id === pId);
+          ${CurriculumQuery.getPrereqs(topicId).map(pId => {
+            const pTopic = CurriculumQuery.getTopic(pId);
             const isDone = state.completedTopics.includes(pId);
             return `
               <div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.02); padding:0.6rem 0.8rem; border-radius:6px; font-size:0.82rem; border:1px solid ${isDone ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.04)'}">
@@ -467,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- TOPIC SELECTION CONTROLLER ---
   function selectTopic(topicId) {
-    const topicData = syllabusData.topics.find(t => t.id === topicId);
+    const topicData = CurriculumQuery.getTopic(topicId);
     if (!topicData) return;
 
     state.activeTopic = topicData;
@@ -487,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- DETAIL DRAWER: focused per-panel renderers ---
 
   function renderDrawerMeta(topic) {
-    const subjectInfo = syllabusData.subjects[topic.subject];
+    const subjectInfo = CurriculumQuery.getSubject(topic.subject);
     const badge = elements.detailContent.querySelector('.detail-subject-badge');
     badge.style.backgroundColor = subjectInfo.color;
     badge.textContent = subjectInfo.title;
@@ -1040,7 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateProgressUI() {
-    const totalTopics = syllabusData.topics.length;
+    const totalTopics = CurriculumQuery.allTopics().length;
     const completedCount = state.completedTopics.length;
     const percentage = Math.round((completedCount / totalTopics) * 100);
 
@@ -1090,7 +1065,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const subjectCurrent = { A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 };
     
     state.completedTopics.forEach(topicId => {
-      const topic = syllabusData.topics.find(t => t.id === topicId);
+      const topic = CurriculumQuery.getTopic(topicId);
       if (topic) {
         subjectCurrent[topic.subject]++;
       }
@@ -1166,7 +1141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const subjectCurrent = { A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 };
 
     state.completedTopics.forEach(topicId => {
-      const topic = syllabusData.topics.find(t => t.id === topicId);
+      const topic = CurriculumQuery.getTopic(topicId);
       if (topic) subjectCurrent[topic.subject]++;
     });
 
@@ -1174,7 +1149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const axes = subjects.map(s => ({
       label: s,
       value: subjectCurrent[s] / subjectMax[s],
-      color: syllabusData.subjects[s].color
+      color: CurriculumQuery.getSubject(s).color
     }));
 
     const advProg = (window.AdvancedMode && window.AdvancedMode.getProgress)
@@ -1254,7 +1229,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.mockExam.score = 0;
     
     // Choose 5 random topics out of all syllabus topics, then pick 1 random question out of 3 for each
-    const shuffled = [...syllabusData.topics].sort(() => 0.5 - Math.random());
+    const shuffled = [...CurriculumQuery.allTopics()].sort(() => 0.5 - Math.random());
     state.mockExam.questions = shuffled.slice(0, 5).map(topic => {
       const qIndex = Math.floor(Math.random() * topic.examQuestions.length);
       return {
@@ -1300,7 +1275,7 @@ document.addEventListener('DOMContentLoaded', () => {
     examCard.innerHTML = `
       <div class="exam-q-header">
         <span class="exam-badge" style="background:var(--subject-d)">Q ${idx + 1} of 5</span>
-        <span style="font-size:0.8rem; color:var(--text-muted)">Subject: ${syllabusData.subjects[mockQ.subject].title}</span>
+        <span style="font-size:0.8rem; color:var(--text-muted)">Subject: ${CurriculumQuery.getSubject(mockQ.subject).title}</span>
       </div>
       <div class="exam-q-scroll">
         <p class="exam-question" style="font-size:1.05rem; line-height:1.6; margin:0;">${formatMathText(q.question)}</p>
@@ -1635,7 +1610,7 @@ print(df[['date', 'title']].tail(5))
     const btnCloseNoteModal = document.getElementById('btnCloseNoteModal');
     if (btnResearchNote && researchNoteModal) {
       // Show button if any notes already exist
-      const hasNotes = syllabusData.topics.some(t => {
+      const hasNotes = CurriculumQuery.allTopics().some(t => {
         const stockId = sessionStorage.getItem('finmath_stock_id') || '2330';
         return FinStorage.safeGet(FinStorage.KEYS.NOTE_PREFIX + t.id + '_' + stockId);
       });
@@ -1645,7 +1620,7 @@ print(df[['date', 'title']].tail(5))
         const list = document.getElementById('researchNoteList');
         if (list) {
           const stockId = sessionStorage.getItem('finmath_stock_id') || '2330';
-          const notes = syllabusData.topics.map(t => {
+          const notes = CurriculumQuery.allTopics().map(t => {
             const key = FinStorage.KEYS.NOTE_PREFIX + t.id + '_' + stockId;
             const text = FinStorage.safeGet(key);
             return text ? { id: t.id, title: t.title, text } : null;
