@@ -54,30 +54,6 @@ window.unlockScroll = function () {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  // --- CRYPTO SECURITY HELPER ---
-  const SECURE_SALT = "FinMathSecureSalt2026";
-  function calculateProgressChecksum(completedArray) {
-    const sorted = [...completedArray].sort().join(',');
-    return AnswerVerifier.simpleHash(sorted + SECURE_SALT);
-  }
-
-  // 通用的「帶簽章驗證」陣列讀寫（給雙證據掌握度使用）
-  function loadVerifiedArray(valKey, sigKey) {
-    try {
-      const val = FinStorage.safeGet(valKey);
-      const sig = FinStorage.safeGet(sigKey);
-      if (val) {
-        const parsed = JSON.parse(val);
-        if (calculateProgressChecksum(parsed) === sig) return parsed;
-      }
-    } catch (e) { /* ignore */ }
-    return null;
-  }
-  function saveVerifiedArray(valKey, sigKey, arr) {
-    FinStorage.safeSet(valKey, JSON.stringify(arr));
-    FinStorage.safeSet(sigKey, calculateProgressChecksum(arr));
-  }
-
   // 派發錯題事件（由 studyTools.js 的錯題本接收；未載入時無副作用）
   function dispatchMistake(topicId, qIndex, chosenIdx) {
     try {
@@ -122,27 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Global Application State
   const state = {
     activeTopic: null,
-    completedTopics: (() => {
-      try {
-        const val = FinStorage.safeGet(FinStorage.KEYS.COMPLETED_TOPICS);
-        const checksum = FinStorage.safeGet(FinStorage.KEYS.COMPLETED_CHECKSUM);
-        if (val) {
-          const parsed = JSON.parse(val);
-          // Verify hash signature to block F12 Console hacks
-          if (calculateProgressChecksum(parsed) === checksum) {
-            return parsed;
-          } else {
-            console.warn("⚠️ 偵測到 LocalStorage 數據篡改！學術誠實防護系統已重置您的學習進度！");
-            FinStorage.safeSet(FinStorage.KEYS.COMPLETED_TOPICS, JSON.stringify([]));
-            FinStorage.safeSet(FinStorage.KEYS.COMPLETED_CHECKSUM, calculateProgressChecksum([]));
-            return [];
-          }
-        }
-        return [];
-      } catch (e) {
-        return [];
-      }
-    })(),
+    completedTopics: [],  // synced from MasteryStore on init and on every mastery change
     mockExam: {
       active: false,
       questions: [],
@@ -153,140 +109,13 @@ document.addEventListener('DOMContentLoaded', () => {
     topicQuestionIndices: {}
   };
 
-  // 雙證據掌握度（P0 校正）：通關需同時 ① 測驗答對 ② 完成微產出。
-  // 既有使用者（已通關章節）自動補種兩種證據，避免進度被重置。
-  state.examPassed = loadVerifiedArray(FinStorage.KEYS.EXAM_PASSED, FinStorage.KEYS.EXAM_SIG) || [...state.completedTopics];
-  state.deliverableDone = loadVerifiedArray(FinStorage.KEYS.DELIVERABLE_DONE, FinStorage.KEYS.DELIVERABLE_SIG) || [...state.completedTopics];
-
-  // 每章微產出任務（L1=可執行, L2=任務引導, L3=輸出驗證 三層架構）
-  const MICRO_DELIVERABLES = {
-    a1: {
-      task: '用 FinMind 抓台積電(2330)財報，算出最近一期「負債比率」與「流動比率」。',
-      output: '兩個數值 + 一句健康度解讀',
-      checklist: ['我已計算出負債比率（負債÷資產）的數值', '我已計算出流動比率（流動資產÷流動負債）的數值', '我能用一句話解讀這兩個數字的財務健康含義'],
-      template: '根據 {{股票代號}} 最新一期財報，負債比率為 {{負債比率%}}，流動比率為 {{流動比率}}，財務健康度屬於 {{高/中/低}} 風險狀態。',
-      reference: { data: ['負債比率: 43.2%', '流動比率: 2.1', '總資產: 6.9兆元'], thesis: '台積電資產負債率 43.2%，低於半導體業均值約 55%；流動比率 2.1 高於安全基準 1.5，財務健康坐標向量朝「低負債、高流動性」象限移動，符合 3-statement-model 優質標的標準。' }
-    },
-    a2: {
-      task: '用 FinMind 拆解一檔台股的 ROE 三因子（淨利率 × 資產週轉率 × 權益乘數）。',
-      output: '三因子數值 + 判斷成長由毛利或槓桿驅動',
-      checklist: ['我已算出淨利率、資產週轉率、權益乘數三個分量', '我能判斷 ROE 的驅動來源（毛利主導 vs 槓桿主導）'],
-      template: '{{股票代號}} ROE 三因子拆解：淨利率 {{淨利率%}} × 資產週轉率 {{週轉率}} × 權益乘數 {{乘數}} = ROE {{ROE%}}，成長主要由 {{毛利/槓桿}} 維度驅動。',
-      reference: { data: ['淨利率: 36.1%', '資產週轉率: 0.52', '權益乘數: 2.3', 'ROE: 43.2%'], thesis: '台積電 ROE 43.2%，淨利率 36.1% 遠高於同業（聯電 ~15%），高 ROE 主要由毛利維度驅動而非槓桿擴張，符合 comps-analysis 優質標的特徵。' }
-    },
-    a3: {
-      task: '抓一檔現金流量表，計算近四季自由現金流（營業現金流 − 資本支出）。',
-      output: 'FCF 四季數列 + 趨勢一句話',
-      checklist: ['我已抓取到近四季的 OCF（營業現金流）數據', '我已抓取到 CapEx（資本支出）並計算 FCF = OCF - CapEx', '我能判斷 FCF 趨勢是上升、下降或穩定'],
-      template: '{{股票代號}} 近四季 FCF：{{Q1}} → {{Q2}} → {{Q3}} → {{Q4}}（億元），整體趨勢 {{上升/持平/下降}}，顯示企業現金流 {{健康/偏緊/惡化}}。',
-      reference: { data: ['OCF (2024 Q4): 5,247億', 'CapEx (2024 Q4): 2,840億', 'FCF (2024 Q4): 2,407億', 'FCF四季均值: ~2,100億'], thesis: '台積電近四季 FCF 均維持 2,000 億元以上正值，顯示即使在先進製程高資本支出週期中，企業依然保持充裕的自由現金流向量，符合 dcf-model 優質輸入標的。' }
-    },
-    b1: {
-      task: '取三檔同業的 P/E 或 P/B，做一張可比表。',
-      output: '3 檔比較表 + 一句相對高估/低估判斷',
-      checklist: ['我已取得至少 3 家同業的估值乘數', '我能判斷目標公司相對同業是高估還是低估'],
-      template: '同業可比：{{股票A}} P/E {{PE_A}}x vs {{股票B}} {{PE_B}}x vs {{股票C}} {{PE_C}}x，均值 {{PE均值}}x，目標公司屬於 {{高估/低估/合理}}。',
-      reference: { data: ['台積電 (2330) P/E: 28x', '聯電 (2303) P/E: 15x', '聯發科 (2454) P/E: 22x', '同業均值: 21.7x'], thesis: '台積電 P/E 28x 高於同業均值 21.7x，溢價來自技術護城河與 AI 需求，comps-analysis 顯示市場給予「技術領先」結構性溢價，而非泡沫。' }
-    },
-    b2: {
-      task: '用台灣公債殖利率設無風險利率，算一檔股票的 WACC 與一個 DCF 估值，並做 WACC±1% 敏感度。',
-      output: 'EV 數值 + 敏感度三點',
-      checklist: ['我已計算 WACC（含無風險利率、Beta、市場風險溢酬）', '我已用 Gordon Growth Model 或多階段 DCF 算出企業現值 EV', '我已完成 WACC ±1% 的敏感度分析（共三個 EV 估值點）'],
-      template: '假設 WACC {{WACC%}}、永續成長率 {{g%}}，計算企業合理現值為 {{EV}} 億元；敏感度：WACC+1%→{{EV_高}}億 / WACC-1%→{{EV_低}}億。',
-      reference: { data: ['無風險利率(台債): 1.6%', 'Beta: 1.35', 'WACC: 8.4%', 'g: 3%', 'EV: 約 22,000億美元'], thesis: '台積電 WACC 8.4%，永續成長率 3%，DCF 合理 EV 約 22,000 億美元。dcf-model 顯示估值對折現率高度敏感，WACC±1% 導致 EV 波動±20%。' }
-    },
-    b3: {
-      task: '把一檔股票放進「成長 vs 估值」二維座標，標出相對同業的位置。',
-      output: '座標位置描述 + 一句結論',
-      checklist: ['我已確定成長率座標（如 YoY 營收成長）', '我已確定估值座標（如 P/E 或 PEG）', '我能描述該股票在二維空間的相對位置'],
-      template: '{{股票代號}} 位於「成長率 {{成長率%}}、P/E {{PE}}x」座標，相對同業屬於 {{高成長高估值/低成長低估值/成長價值失衡}} 象限，估值 {{合理/偏貴/偏便宜}}。',
-      reference: { data: ['台積電 YoY成長: +34%', 'P/E: 28x', 'PEG: 0.82', '同業均值 PEG: 1.1'], thesis: '台積電在「高成長-高估值」象限，但 PEG=0.82 低於同業均值 1.1，sector-overview 分析顯示估值未充分反映 AI 驅動成長，存在結構性低估空間。' }
-    },
-    c1: {
-      task: '抓一檔近 20 日三大法人買賣超，算淨買超合計。',
-      output: '淨買超數列 + 主力方向判斷',
-      checklist: ['我已取得外資、投信、自營商三者的近 20 日買賣超數據', '我已計算三大法人合計淨買超（正為買，負為賣）', '我能判斷主力資金是流入還是流出'],
-      template: '{{股票代號}} 近 20 日三大法人：外資 {{外資}} 億 + 投信 {{投信}} 億 + 自營 {{自營}} 億 = 合計 {{合計}} 億，資金方向 {{持續買超/持續賣超/分歧}}。',
-      reference: { data: ['外資近20日: +180億', '投信近20日: +23億', '自營商近20日: -8億', '合計淨買超: +195億'], thesis: '台積電近 20 日三大法人合計淨買超 195 億，外資主導，morning-note 籌碼矩陣顯示多頭資金向量方向清晰，籌碼面偏多。' }
-    },
-    c2: {
-      task: '抓融資融券餘額，算「券資比」近期變化。',
-      output: '券資比趨勢 + 一句多空解讀',
-      checklist: ['我已取得融資餘額與融券餘額數據', '我已計算券資比並觀察近期趨勢'],
-      template: '{{股票代號}} 近期券資比：{{上週比}} → {{本週比}}，趨勢 {{上升/下降/持平}}，市場多空槓桿 {{偏多/偏空/均衡}}。',
-      reference: { data: ['融資餘額: 52億', '融券餘額: 3.1億', '券資比: 5.96%', '近一週變化: -0.8%'], thesis: '台積電券資比 5.96% 且持續下降，顯示空頭力道減弱，融資融券力學結構偏多，惟融資水位偏高需注意斷頭風險。' }
-    },
-    c3: {
-      task: '抓集保大戶持股，算千張大戶持股比近期變化。',
-      output: '大戶持股比變化 + 一句籌碼解讀',
-      checklist: ['我已取得集保股權分散表數據', '我已計算千張以上大戶持股比例並觀察週變化'],
-      template: '{{股票代號}} 千張大戶持股比：前週 {{前週%}} → 本週 {{本週%}}，變化 {{+/-差距%}}，籌碼 {{更集中/更分散}}，多頭訊號 {{強化/弱化}}。',
-      reference: { data: ['千張大戶持股: 73.2%', '前週: 72.1%', '週變化: +1.1%', '大戶人數: 298人'], thesis: '台積電千張大戶持股比升至 73.2%（+1.1%），籌碼更集中，統計熵減少，籌碼面正面。' }
-    },
-    d1: {
-      task: '抓一檔近一週新聞標題，人工標記正/負面並算情緒比例。',
-      output: '情緒比例 + 一句輿情判斷',
-      checklist: ['我已抓取至少 5 則個股新聞標題', '我已對每則新聞人工標記正面/負面/中性', '我已計算情緒比例'],
-      template: '{{股票代號}} 近一週 {{N}} 則新聞中：正面 {{正%}}、負面 {{負%}}、中性 {{中%}}，整體情緒向量 {{偏多/偏空/中性}}。',
-      reference: { data: ['抓取新聞: 12則', '正面: 7則 (58%)', '負面: 2則 (17%)', '中性: 3則 (25%)'], thesis: '台積電近週新聞情緒正面占比 58%，主題集中於 AI 晶片需求，morning-note 情緒矩陣顯示市場輿論偏多。' }
-    },
-    d2: {
-      task: '給定一個先驗看法，用一則新事件（法說/財報）做一次貝氏更新。',
-      output: '先驗 → 後驗的更新說明',
-      checklist: ['我已設定先驗機率 P(Beat) 並說明依據', '我已估計條件機率 P(Optimistic|Beat) 和 P(Optimistic|Not Beat)', '我已用貝氏公式算出後驗機率'],
-      template: '先驗 P(Beat)={{先驗%}}，法說展望評估為{{正面/負面}}，後驗 P(Beat|Signal)={{後驗%}}，預期 {{上修/下修}} {{%}}。',
-      reference: { data: ['先驗 P(Beat): 60%', 'P(正面|Beat): 90%', 'P(正面|Not Beat): 30%', '後驗: 81.8%'], thesis: '台積電法說會後驗分析：後驗機率從 60% 上修至 81.8%，earnings-analysis 建議上調全年 EPS 預估約 8%，目標價從 950 元調升至 1,050 元。' }
-    },
-    d3: {
-      task: '列出一檔股票未來一季的潛在催化劑事件並標時間。',
-      output: '至少 3 個催化劑 + 時間',
-      checklist: ['我已列出至少 3 個具體的催化劑事件', '我已標注每個事件的預期時間或窗口'],
-      template: '{{股票代號}} 未來一季催化劑：① {{事件1}}（{{時間1}}）② {{事件2}}（{{時間2}}）③ {{事件3}}（{{時間3}}），最高衝擊催化劑為 {{最重要事件}}。',
-      reference: { data: ['Q1法說會: 2025/01/16', '月營收公告: 每月10日前', '輝達GTC大會: 2025/03'], thesis: '台積電 Q1 三大催化劑密集，catalyst-calendar 建議在 1/10 月營收公告前建立核心部位。' }
-    },
-    e1: {
-      task: '用報酬率資料估一檔股票對大盤的 Beta，並用 CAPM 算預期報酬。',
-      output: 'Beta 值 + 預期報酬',
-      checklist: ['我已計算個股與大盤報酬率的協方差和大盤方差', '我已算出 Beta 值', '我已用 CAPM 公式算出合理預期年化報酬率'],
-      template: '{{股票代號}} Beta={{Beta}}，CAPM 預期報酬 = {{Rf%}} + {{Beta}} × ({{Rm%}} - {{Rf%}}) = {{預期報酬%}}。',
-      reference: { data: ['Beta: 1.35', '無風險利率(Rf): 1.6%', '市場報酬(Rm): 9%', 'CAPM預期報酬: 11.6%'], thesis: '台積電 Beta=1.35，CAPM 預期年化報酬 11.6%，portfolio-optim 建議以此作為組合高 Beta 成長核心持倉，配置低相關性資產對沖系統性風險。' }
-    },
-    e2: {
-      task: '算一個簡單投組的年化報酬、波動與 Sharpe Ratio。',
-      output: '三個數值 + 一句評價',
-      checklist: ['我已計算投組的年化報酬率', '我已計算投組的年化波動度（標準差）', '我已用 Sharpe Ratio 公式評估風險調整後效益'],
-      template: '投組年化報酬 {{報酬%}}，年化波動 {{波動%}}，Sharpe Ratio = ({{報酬%}} - {{Rf%}}) / {{波動%}} = {{Sharpe}}，風險調整後績效屬 {{優異/合理/偏低}}。',
-      reference: { data: ['台積電年化報酬: 18%', '年化波動: 28%', '無風險利率: 1.6%', 'Sharpe Ratio: 0.586'], thesis: '台積電 Sharpe Ratio 0.59，高於台灣加權指數 0.42，portfolio-optim 顯示風險調整後效率優於大盤，適合作為核心持倉。' }
-    },
-    e3: {
-      task: '算一檔（或投組）的歷史最大回撤（MDD）與一個簡單 VaR。',
-      output: 'MDD + VaR 數值',
-      checklist: ['我已找出歷史最高點和最低谷計算最大回撤（MDD）', '我已用歷史模擬法或常態假設計算 95% 日 VaR'],
-      template: '{{股票代號}} 最大回撤 MDD={{MDD%}}（{{高點}}→{{低點}}），95% 日 VaR={{VaR%}}，持有 100 萬元部位的單日最大預期損失為 {{損失額}} 元。',
-      reference: { data: ['MDD: -34% (2022年熊市)', '95% 日VaR: -2.8%', '部位100萬元日最大損失: 2.8萬'], thesis: '台積電 2022 年最大回撤 34%；目前 95% 日 VaR 2.8%，年化風險敞口可控，idea-generation 風控模型建議以 MDD/2 設停損線。' }
-    },
-    f1: {
-      task: '抓月營收算 YoY 與 MoM，判斷營收動能是否轉強。',
-      output: 'YoY/MoM 數值 + 動能判斷',
-      checklist: ['我已計算年增率 YoY（與去年同月比）', '我已計算月增率 MoM（與上個月比）', '我能判斷營收動能是加速、持平或減速'],
-      template: '{{股票代號}} 最新月營收 YoY={{YoY%}}、MoM={{MoM%}}，月度脈衝訊號 {{超預期/符合預期/低於預期}}，FCF 修正方向 {{上調/維持/下調}}。',
-      reference: { data: ['最新月營收: 2,760億', 'YoY: +38.8%', 'MoM: +4.2%', '市場共識YoY: +35%'], thesis: '台積電最新月營收 YoY +38.8% 超出市場共識 +35%，earnings-preview 脈衝修正模型建議上調全年 FCF 預測約 5%，企業估值從 22,000 億調升至 23,100 億美元。' }
-    },
-    f2: {
-      task: '結合營收與一則法說訊號，更新對下一季的機率看法。',
-      output: '更新後的機率判斷說明',
-      checklist: ['我已確認最新月營收數據（YoY 驚喜值）', '我已評估法說展望的情緒方向', '我已用貝氏框架更新下季超預期的機率'],
-      template: '{{股票代號}} 月營收 YoY {{YoY%}}（{{超/低}}市場預期 {{差距%}}），法說情緒 {{正/負}}，下季超預期後驗機率從 {{先驗%}} 更新至 {{後驗%}}。',
-      reference: { data: ['月營收YoY: +38.8%', 'YoY surprise: +3.8%', '法說情緒向量: 0.82', '後驗超預期機率: 81.8%'], thesis: '結合月營收驚喜與法說正面情緒，台積電下季超預期後驗機率 81.8%，initiating-coverage 模型建議給予「強力買入」，目標價上調至 1,050 元。' }
-    },
-    f3: {
-      task: '結合融資餘額與大戶持股，判斷籌碼結構是否健康。',
-      output: '一句籌碼健康度結論 + 依據',
-      checklist: ['我已取得最新融資餘額並計算斷頭風險邊界', '我已取得集保大戶持股比例', '我能綜合判斷籌碼結構的多空力學'],
-      template: '{{股票代號}} 籌碼：大戶持股 {{大戶%}}（{{↑/↓}}）、券資比 {{券資比%}}（{{↑/↓}}），斷頭邊界 {{斷頭價}} 元，籌碼結構 {{健康/存在隱憂}}。',
-      reference: { data: ['大戶持股: 73.2% (+1.1%)', '券資比: 5.96% (-0.8%)', '融資維持率: ~185%', '斷頭邊界: 約 700元'], thesis: '台積電大戶持股升至 73.2% 且券資比下降，portfolio-rebalance 力學分析顯示籌碼結構健康，斷頭重力遠低於當前股價，多頭支撐穩固。' }
-    }
-  };
+  MasteryStore.init(syllabusData.topics, function () {
+    state.completedTopics = MasteryStore.getCompletedTopics();
+    updateProgressUI();
+    renderRadarChart();
+    renderSvgMap();
+  });
+  state.completedTopics = MasteryStore.getCompletedTopics();
 
   // P2：多能力點章節的「能力點拆解」（對齊 Mastery Learning：一次只推進一個能力點）
   // 不改節點結構，只在詳情頁提示分階段學習。
@@ -1017,7 +846,7 @@ document.addEventListener('DOMContentLoaded', () => {
           explanationBox.style.borderTopColor = 'var(--subject-a)';
 
           // 證據一：測驗答對（通關仍需完成微產出）
-          recordExamPassed(topic.id);
+          MasteryStore.recordExamPassed(topic.id);
           renderMasteryPanel(topic);
           document.getElementById('masteryPanel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
@@ -1039,7 +868,7 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       // 若該章測驗已答對過，預先揭示答案並鎖定（通關仍需微產出）
-      if (state.examPassed.includes(topic.id)) {
+      if (MasteryStore.isExamPassed(topic.id)) {
         if (isCorrect) {
           btn.classList.add('correct');
           explanationBox.style.display = 'block';
@@ -1049,45 +878,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       optionsGrid.appendChild(btn);
     });
-  }
-
-  // --- PROGRESS STATE TRACKING ---
-  // 證據一：測驗答對
-  function recordExamPassed(topicId) {
-    if (!state.examPassed.includes(topicId)) {
-      state.examPassed.push(topicId);
-      saveVerifiedArray(FinStorage.KEYS.EXAM_PASSED, FinStorage.KEYS.EXAM_SIG, state.examPassed);
-    }
-    finalizeCompletion();
-  }
-
-  // 證據二：完成微產出（#21: 同時儲存投資論點筆記）
-  function recordDeliverableDone(topicId, thesisText) {
-    if (!state.deliverableDone.includes(topicId)) {
-      state.deliverableDone.push(topicId);
-      saveVerifiedArray(FinStorage.KEYS.DELIVERABLE_DONE, FinStorage.KEYS.DELIVERABLE_SIG, state.deliverableDone);
-    }
-    if (thesisText) {
-      const stockId = sessionStorage.getItem('finmath_stock_id') || '2330';
-      const noteKey = FinStorage.KEYS.NOTE_PREFIX + topicId + '_' + stockId;
-      FinStorage.safeSet(noteKey, thesisText);
-      const btnNote = document.getElementById('btnResearchNote');
-      if (btnNote) btnNote.style.display = '';
-    }
-    finalizeCompletion();
-  }
-
-  // 通關 = 兩種證據齊備（重新推導 completedTopics，並刷新 UI）
-  function finalizeCompletion() {
-    state.completedTopics = syllabusData.topics
-      .filter(t => state.examPassed.includes(t.id) && state.deliverableDone.includes(t.id))
-      .map(t => t.id);
-    FinStorage.safeSet(FinStorage.KEYS.COMPLETED_TOPICS, JSON.stringify(state.completedTopics));
-    FinStorage.safeSet(FinStorage.KEYS.COMPLETED_CHECKSUM, calculateProgressChecksum(state.completedTopics));
-
-    updateProgressUI();
-    renderRadarChart();
-    renderSvgMap();
   }
 
   // P2：能力點拆解面板（僅多能力點章節顯示）
@@ -1125,9 +915,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     panel.style.display = 'block';
 
-    const md = MICRO_DELIVERABLES[topic.id] || { task: '完成一個與本章相關的小產出。', output: '一段可檢視的結果', checklist: [], template: '', reference: null };
-    const examOK = state.examPassed.includes(topic.id);
-    const delivOK = state.deliverableDone.includes(topic.id);
+    const md = syllabusData.deliverables[topic.id] || { task: '完成一個與本章相關的小產出。', output: '一段可檢視的結果', checklist: [], template: '', reference: null };
+    const examOK = MasteryStore.isExamPassed(topic.id);
+    const delivOK = MasteryStore.isDeliverableDone(topic.id);
     const done = examOK && delivOK;
 
     // #16: Checklist items HTML
@@ -1241,7 +1031,9 @@ document.addEventListener('DOMContentLoaded', () => {
           .filter(p => p.value)
           .map(p => `${p.label}: ${p.value}`)
           .join('｜');
-        recordDeliverableDone(topic.id, thesisText);
+        MasteryStore.recordDeliverableDone(topic.id, thesisText);
+        const btnNote = document.getElementById('btnResearchNote');
+        if (btnNote) btnNote.style.display = '';
         renderMasteryPanel(topic);
       };
     }
@@ -1258,8 +1050,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // #22: Dual-axis progress display
     const dualRow = document.getElementById('dualAxisRow');
     if (dualRow) {
-      const examCount = state.examPassed.length;
-      const delivCount = state.deliverableDone.length;
+      const examCount = MasteryStore.getExamPassed().length;
+      const delivCount = MasteryStore.getDeliverableDone().length;
       const gap = examCount - delivCount;
       const gapWarn = gap >= 3 ? `<div style="margin-top:0.5rem; font-size:0.75rem; color:#f97316; background:rgba(249,115,22,0.08); border:1px solid rgba(249,115,22,0.3); border-radius:4px; padding:0.35rem 0.6rem;">⚠️ 理論軸超前實踐軸 ${gap} 章，建議先完成微產出再繼續答題。</div>` : '';
       dualRow.innerHTML = `
@@ -1631,7 +1423,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const selectedIdx = state.mockExam.answers[i];
       if (selectedIdx !== undefined && AnswerVerifier.isCorrect(q.id, q.qIndex, selectedIdx, q.examQuestion.answerHash)) {
         // 模擬考只給「測驗答對」這一種證據；通關仍需在章節內完成微產出
-        recordExamPassed(q.id);
+        MasteryStore.recordExamPassed(q.id);
       }
     });
   }
