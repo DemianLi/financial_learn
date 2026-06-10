@@ -31,7 +31,10 @@
       .replace(/\\[a-zA-Z]+/g, '').replace(/\s+/g, ' ').trim();
   }
 
-  function topicById(id) { return (typeof syllabusData !== 'undefined' && syllabusData.topics.find(t => t.id === id)) || null; }
+  function topicById(id) {
+    if (typeof CurriculumQuery !== 'undefined') return CurriculumQuery.getTopic(id);
+    return (typeof syllabusData !== 'undefined' && syllabusData.topics.find(t => t.id === id)) || null;
+  }
   function correctIdx(topicId, qIndex, q) { return AnswerVerifier.correctIndexOf(topicId, qIndex, q); }
 
   let mistakes = load(MK) || {};     // key: "topicId#qIndex"
@@ -72,7 +75,7 @@
       (bySubject[t.subject] = bySubject[t.subject] || []).push(m);
     });
     Object.keys(bySubject).sort().forEach(sub => {
-      const subInfo = syllabusData.subjects[sub];
+      const subInfo = (typeof CurriculumQuery !== 'undefined') ? CurriculumQuery.getSubject(sub) : syllabusData.subjects[sub];
       md += `## ${subInfo ? subInfo.title : '科目 ' + sub}\n\n`;
       bySubject[sub].forEach(m => {
         const t = topicById(m.topicId); const q = t.examQuestions[m.qIndex];
