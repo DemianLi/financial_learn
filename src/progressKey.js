@@ -96,5 +96,48 @@
     return bitsToState(base62ToBigint(payload));
   }
 
-  global.ProgressKey = { encode, decode };
+  // ── Browser-only helpers (depend on MasteryStore / FinStorage / AnswerVerifier) ──
+
+  const ADV_SALT = 'FinMathAdvancedSalt2026';
+
+  function currentState() {
+    return {
+      examPassed:      MasteryStore.getExamPassed(),
+      deliverableDone: MasteryStore.getDeliverableDone(),
+      advancedChecks:  FinStorage.safeGetJSON(FinStorage.KEYS.ADVANCED_CHECKS) || {},
+    };
+  }
+
+  function applyState(decoded, mode) {
+    let target;
+    if (mode === 'union') {
+      const cur = currentState();
+      const ep  = [...new Set([...cur.examPassed,      ...decoded.examPassed])];
+      const dd  = [...new Set([...cur.deliverableDone, ...decoded.deliverableDone])];
+      const adv = { ...cur.advancedChecks };
+      for (const [gid, items] of Object.entries(decoded.advancedChecks)) {
+        adv[gid] = [...new Set([...(adv[gid] || []), ...items])].sort((a, b) => a - b);
+      }
+      target = { examPassed: ep, deliverableDone: dd, advancedChecks: adv };
+    } else {
+      target = decoded;
+    }
+
+    FinStorage.safeSet(FinStorage.KEYS.EXAM_PASSED,        JSON.stringify(target.examPassed));
+    FinStorage.safeSet(FinStorage.KEYS.EXAM_SIG,           MasteryStore.calculateChecksum(target.examPassed));
+    FinStorage.safeSet(FinStorage.KEYS.DELIVERABLE_DONE,   JSON.stringify(target.deliverableDone));
+    FinStorage.safeSet(FinStorage.KEYS.DELIVERABLE_SIG,    MasteryStore.calculateChecksum(target.deliverableDone));
+
+    const completed = target.examPassed.filter(id => target.deliverableDone.includes(id));
+    FinStorage.safeSet(FinStorage.KEYS.COMPLETED_TOPICS,   JSON.stringify(completed));
+    FinStorage.safeSet(FinStorage.KEYS.COMPLETED_CHECKSUM, MasteryStore.calculateChecksum(completed));
+
+    FinStorage.safeSetJSON(FinStorage.KEYS.ADVANCED_CHECKS, target.advancedChecks);
+    FinStorage.safeSet(FinStorage.KEYS.ADVANCED_CHECKS_SIG,
+      AnswerVerifier.simpleHash(JSON.stringify(target.advancedChecks) + ADV_SALT));
+
+    window.location.reload();
+  }
+
+  global.ProgressKey = { encode, decode, currentState, applyState };
 })(typeof globalThis !== 'undefined' ? globalThis : /* istanbul ignore next */ window);

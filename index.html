@@ -42,6 +42,9 @@
         <button id="btnAdvanced" class="btn" style="display:none;" aria-label="進入機構研究員進階圖譜">
           🚀 進階模式
         </button>
+        <button id="btnProgressKey" class="btn" aria-label="備份或還原學習進度">
+          🔑
+        </button>
       </div>
     </header>
 
@@ -312,12 +315,57 @@
     </div>
   </div>
 
+  <!-- Progress Key Modal -->
+  <div id="progressKeyModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="progressKeyModalTitle">
+    <div class="modal-box" style="max-width:500px;">
+      <div class="modal-header">
+        <h3 id="progressKeyModalTitle" style="margin:0;">🔑 學習進度金鑰</h3>
+        <button id="btnCloseProgressKey" class="modal-close" aria-label="關閉">&times;</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:1.2rem;">
+
+        <!-- Export -->
+        <div>
+          <p style="margin:0 0 0.6rem; font-size:0.85rem; color:var(--text-secondary);">複製金鑰保存到任何地方，換裝置時可用於還原進度。</p>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <code id="pkCurrentKey" style="flex:1; background:var(--bg-tertiary,#1a1a2e); border:1px solid var(--border-color); border-radius:6px; padding:0.5rem 0.7rem; font-size:0.82rem; color:var(--accent-green,#00ff88); letter-spacing:0.05em; word-break:break-all;"></code>
+            <button id="btnCopyKey" class="btn" style="white-space:nowrap; flex-shrink:0;">複製</button>
+          </div>
+        </div>
+
+        <hr style="border:none; border-top:1px solid var(--border-color); margin:0;">
+
+        <!-- Import -->
+        <div id="pkImportSection">
+          <p style="margin:0 0 0.6rem; font-size:0.85rem; color:var(--text-secondary);">貼入金鑰以還原進度：</p>
+          <textarea id="pkInput" rows="2" placeholder="FM1-xxxxxx-xxxxxx-xxxxxx-xx" style="width:100%; box-sizing:border-box; background:var(--bg-tertiary,#1a1a2e); border:1px solid var(--border-color); border-radius:6px; padding:0.5rem 0.7rem; color:var(--text-primary); font-family:monospace; font-size:0.82rem; resize:none;"></textarea>
+          <div style="display:flex; align-items:center; gap:0.6rem; margin-top:0.5rem;">
+            <button id="btnValidateKey" class="btn btn-primary">驗證並還原</button>
+            <span id="pkError" style="color:#ff6b6b; font-size:0.8rem; display:none;"></span>
+          </div>
+        </div>
+
+        <!-- Conflict resolution (hidden until a valid key is pasted) -->
+        <div id="pkConflictSection" style="display:none; background:var(--bg-tertiary,#1a1a2e); border:1px solid var(--border-color); border-radius:8px; padding:1rem;">
+          <p id="pkDiffSummary" style="margin:0 0 0.8rem; font-size:0.85rem; color:var(--text-primary); line-height:1.6;"></p>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button id="btnPkOverwrite" class="btn btn-primary" style="font-size:0.82rem;">用金鑰覆蓋</button>
+            <button id="btnPkUnion" class="btn" style="font-size:0.82rem;">取聯集（保留最多）</button>
+            <button id="btnPkCancel" class="btn" style="font-size:0.82rem;">取消</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="src/syllabusData.js?v=__HASH__"></script>
   <script src="src/advancedData.js?v=__HASH__"></script>
   <script src="src/answerVerifier.js?v=__HASH__"></script>
   <script src="src/storage.js?v=__HASH__"></script>
   <script src="src/masteryStore.js?v=__HASH__"></script>
+  <script src="src/progressKey.js?v=__HASH__"></script>
   <script src="src/curriculumQuery.js?v=__HASH__"></script>
   <script src="src/pythonHighlight.js?v=__HASH__"></script>
   <script src="src/app.js?v=__HASH__"></script>

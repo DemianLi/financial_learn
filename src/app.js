@@ -131,7 +131,22 @@ document.addEventListener('DOMContentLoaded', () => {
     btnPrevExam: document.getElementById('btnPrevExam'),
     btnNextExam: document.getElementById('btnNextExam'),
     btnSubmitExam: document.getElementById('btnSubmitExam'),
-    btnSwitchQuestion: document.getElementById('btnSwitchQuestion')
+    btnSwitchQuestion: document.getElementById('btnSwitchQuestion'),
+
+    // Progress Key Modal
+    btnProgressKey:       document.getElementById('btnProgressKey'),
+    progressKeyModal:     document.getElementById('progressKeyModal'),
+    btnCloseProgressKey:  document.getElementById('btnCloseProgressKey'),
+    pkCurrentKey:         document.getElementById('pkCurrentKey'),
+    btnCopyKey:           document.getElementById('btnCopyKey'),
+    pkInput:              document.getElementById('pkInput'),
+    btnValidateKey:       document.getElementById('btnValidateKey'),
+    pkError:              document.getElementById('pkError'),
+    pkConflictSection:    document.getElementById('pkConflictSection'),
+    pkDiffSummary:        document.getElementById('pkDiffSummary'),
+    btnPkOverwrite:       document.getElementById('btnPkOverwrite'),
+    btnPkUnion:           document.getElementById('btnPkUnion'),
+    btnPkCancel:          document.getElementById('btnPkCancel'),
   };
 
   // Define Node Coordinates on SVG Canvas (Width: 600, Height: 630 - Expanded vertically for Subject E)
@@ -1404,6 +1419,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- FINMIND DATA SANDBOX ---
+  function openProgressKeyModal() {
+    const key = ProgressKey.encode(ProgressKey.currentState());
+    elements.pkCurrentKey.textContent = key;
+    elements.pkInput.value = '';
+    elements.pkError.style.display = 'none';
+    elements.pkError.textContent = '';
+    elements.pkConflictSection.style.display = 'none';
+    elements.progressKeyModal.classList.add('active');
+    window.lockScroll();
+  }
+
+  function _progressKeyDiffSummary(cur, decoded) {
+    const curDone    = cur.examPassed.filter(id => cur.deliverableDone.includes(id)).length;
+    const keyDone    = decoded.examPassed.filter(id => decoded.deliverableDone.includes(id)).length;
+    const curAdvDone = Object.values(cur.advancedChecks).filter(v => v.length >= 4).length;
+    const keyAdvDone = Object.values(decoded.advancedChecks).filter(v => v.length >= 4).length;
+    return `目前進度：已完成 ${curDone} 章基礎課程、${curAdvDone} 個進階模組\n金鑰進度：已完成 ${keyDone} 章基礎課程、${keyAdvDone} 個進階模組`;
+  }
+
   function openSandbox() {
     generateSandboxCode();
     elements.sandboxModal.classList.add('active');
@@ -1642,6 +1676,52 @@ print(df[['date', 'title']].tail(5))
       researchNoteModal.addEventListener('click', e => { if (e.target === researchNoteModal) { researchNoteModal.style.display = 'none'; window.unlockScroll(); } });
     }
 
+    // Progress Key Listeners
+    elements.btnProgressKey.addEventListener('click', openProgressKeyModal);
+
+    elements.btnCloseProgressKey.addEventListener('click', () => {
+      elements.progressKeyModal.classList.remove('active');
+      window.unlockScroll();
+    });
+
+    elements.btnCopyKey.addEventListener('click', () => {
+      navigator.clipboard.writeText(elements.pkCurrentKey.textContent).then(() => {
+        elements.btnCopyKey.textContent = '已複製 ✓';
+        setTimeout(() => { elements.btnCopyKey.textContent = '複製'; }, 2000);
+      });
+    });
+
+    elements.btnValidateKey.addEventListener('click', () => {
+      const raw = elements.pkInput.value.trim();
+      const decoded = ProgressKey.decode(raw);
+      if (!decoded) {
+        elements.pkError.textContent = '金鑰無效或已損壞，請確認後重試。';
+        elements.pkError.style.display = 'inline';
+        elements.pkConflictSection.style.display = 'none';
+        return;
+      }
+      elements.pkError.style.display = 'none';
+      const cur = ProgressKey.currentState();
+      elements.pkDiffSummary.textContent = _progressKeyDiffSummary(cur, decoded);
+      elements.pkConflictSection.style.display = 'block';
+      elements.pkConflictSection._decoded = decoded;
+    });
+
+    elements.btnPkOverwrite.addEventListener('click', () => {
+      const decoded = elements.pkConflictSection._decoded;
+      if (decoded) ProgressKey.applyState(decoded, 'overwrite');
+    });
+
+    elements.btnPkUnion.addEventListener('click', () => {
+      const decoded = elements.pkConflictSection._decoded;
+      if (decoded) ProgressKey.applyState(decoded, 'union');
+    });
+
+    elements.btnPkCancel.addEventListener('click', () => {
+      elements.pkConflictSection.style.display = 'none';
+      elements.pkInput.value = '';
+    });
+
     // Mock Exam Listeners
     elements.btnMockExam.addEventListener('click', openMockExam);
     elements.btnCloseExam.addEventListener('click', () => {
@@ -1688,6 +1768,10 @@ print(df[['date', 'title']].tail(5))
       }
       if (e.target === elements.examModal) {
         elements.examModal.classList.remove('active');
+        window.unlockScroll();
+      }
+      if (e.target === elements.progressKeyModal) {
+        elements.progressKeyModal.classList.remove('active');
         window.unlockScroll();
       }
 
