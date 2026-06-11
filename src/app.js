@@ -998,21 +998,37 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
 
-    // #16: Checklist gate — disable submit until all items checked
+    // #16: Checklist gate + persistence
     const btn = panel.querySelector('#btnDeliverableDone');
+    const allChecks = panel.querySelectorAll('.deliverable-check');
+
+    // Restore saved checklist state from localStorage
+    if (allChecks.length > 0) {
+      if (delivOK) {
+        allChecks.forEach(c => { c.checked = true; });
+      } else {
+        const saved = FinStorage.safeGetJSON(FinStorage.KEYS.CHECKLIST_STATE) || {};
+        const topicSaved = saved[topic.id] || [];
+        allChecks.forEach((c, i) => { c.checked = topicSaved.includes(i); });
+      }
+    }
+
     if (btn && !delivOK) {
-      const checks = panel.querySelectorAll('.deliverable-check');
+      const checks = allChecks;
+      const saveChecklist = () => {
+        const saved = FinStorage.safeGetJSON(FinStorage.KEYS.CHECKLIST_STATE) || {};
+        saved[topic.id] = [...checks].reduce((arr, c, i) => { if (c.checked) arr.push(i); return arr; }, []);
+        FinStorage.safeSetJSON(FinStorage.KEYS.CHECKLIST_STATE, saved);
+      };
       if (checks.length > 0) {
-        btn.disabled = true;
-        btn.style.opacity = '0.45';
-        btn.title = '請先勾選上方自評清單';
         const updateGate = () => {
           const allChecked = [...checks].every(c => c.checked);
           btn.disabled = !allChecked;
           btn.style.opacity = allChecked ? '1' : '0.45';
           btn.title = allChecked ? '' : '請先勾選上方自評清單';
         };
-        checks.forEach(c => c.addEventListener('change', updateGate));
+        updateGate();   // 初始化：依還原的勾選狀態決定按鈕是否可用
+        checks.forEach(c => c.addEventListener('change', () => { updateGate(); saveChecklist(); }));
       }
       btn.onclick = () => {
         const thesisInputs = panel.querySelectorAll('.thesis-input');
