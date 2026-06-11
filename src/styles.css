@@ -1316,6 +1316,7 @@ footer .footer-disclaimer {
   }
   #btnSandbox::before    { content: '⚡'; }
   #btnAdvanced::before   { content: '🚀'; }
+  #btnProgressKey::before { content: '🔑'; }
   #btnResearchNote::before { content: '📋'; }
   #btnMockExam::before   { content: '📝'; }
   #btnAiAnalyst::before  { content: '🤖'; }
