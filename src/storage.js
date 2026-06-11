@@ -24,6 +24,8 @@ window.FinStorage = (function () {
     NOTE_PREFIX:        'finmath_note_',
     // #8 - onboarding tour
     ONBOARDING_DONE:    'finmath_onboarding_done',
+    // app.js 自評清單暫存（deliverable 未完成時的部分勾選進度）
+    CHECKLIST_STATE:    'finmath_checklist_state',
   };
 
   function safeGet(key) {
