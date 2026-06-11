@@ -1676,6 +1676,29 @@ print(df[['date', 'title']].tail(5))
       researchNoteModal.addEventListener('click', e => { if (e.target === researchNoteModal) { researchNoteModal.style.display = 'none'; window.unlockScroll(); } });
     }
 
+    // Hamburger Menu (mobile)
+    const btnHamburger = document.getElementById('btnHamburger');
+    const headerActions = document.querySelector('.header-actions');
+    if (btnHamburger && headerActions) {
+      btnHamburger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = headerActions.classList.toggle('menu-open');
+        btnHamburger.setAttribute('aria-expanded', String(isOpen));
+      });
+      headerActions.addEventListener('click', (e) => {
+        if (e.target.closest('.btn')) {
+          headerActions.classList.remove('menu-open');
+          btnHamburger.setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.addEventListener('click', (e) => {
+        if (!headerActions.contains(e.target) && e.target !== btnHamburger) {
+          headerActions.classList.remove('menu-open');
+          btnHamburger.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
     // Progress Key Listeners
     elements.btnProgressKey.addEventListener('click', openProgressKeyModal);
 
