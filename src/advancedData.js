@@ -31,11 +31,11 @@ const advancedSyllabus = {
         "理解 initiating-coverage 五階段：公司研究 → 財務建模 → 估值分析 → 圖表生成 → 報告組裝。",
         "把『一個比喻』改寫成『一份下次自己能重現的步驟清單』——每步標明輸入資料、執行動作、輸出格式，六個月後不看原始代碼也能重跑。"
       ],
-      finmindCode: "import pandas as pd\nfrom FinMind.data import DataLoader\n\n# 流程第 1 步：取數（SOP 的起點不是公式，而是可重現的資料管線）\ndl = DataLoader()\nfin = dl.taiwan_stock_financial_statement(stock_id='2330', start_date='2022-01-01')\nfin_pivot = fin.pivot_table(index='date', columns='type', values='value', aggfunc='first')\n\n# 流程第 2 步：定義一份可重複呼叫的『取數函式』（SOP 化的關鍵）\ndef load_fundamentals(stock_id, start='2022-01-01'):\n    df = dl.taiwan_stock_financial_statement(stock_id=stock_id, start_date=start)\n    return df.pivot_table(index='date', columns='type', values='value', aggfunc='first')\n\n# 流程第 3 步：把每一步輸出存成中間檔，讓流程可追溯、可交接\nfin_pivot.to_csv('step1_fundamentals_2330.csv')\nprint('✅ 已把「取數」這一步 SOP 化，下一步：WACC 計算')",
+      finmindCode: "import pandas as pd\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n\n# 步驟 1：取數 ── 輸入：stock_id, start_date ／ 執行：呼叫 FinMind API ／ 輸出：財報 pivot DataFrame\ndef load_fundamentals(stock_id, start='2022-01-01'):\n    df = dl.taiwan_stock_financial_statement(stock_id=stock_id, start_date=start)\n    return df.pivot_table(index='date', columns='type', values='value', aggfunc='first')\n\n# 步驟 2：WACC 計算 ── 輸入：risk_free, beta, erp ／ 執行：加權平均資本成本 ／ 輸出：wacc（float）\ndef calc_wacc(risk_free=0.015, beta=1.1, erp=0.06):\n    return risk_free + beta * erp  # 簡化全權益版；實務需加稅後負債成本\n\n# 步驟 3：FCF 預測 ── 輸入：fundamentals DataFrame ／ 執行：OCF - Capex + 趨勢外推 ／ 輸出：fcf_list（list）\ndef forecast_fcf(fundamentals, years=5):\n    pass  # 骨架：取 OperatingCashFlow、CapitalExpenditure，計算歷史 FCF 再線性外推\n\n# 步驟 4：終值 ── 輸入：fcf_last, wacc, g ／ 執行：Gordon Growth Model ／ 輸出：terminal_value（float）\ndef calc_terminal_value(fcf_last, wacc, g=0.02):\n    return fcf_last * (1 + g) / (wacc - g)\n\n# 步驟 5：折現加總 ── 輸入：fcf_list, terminal_value, wacc ／ 執行：逐年折現加總 ／ 輸出：enterprise_value（float）\ndef discount_to_pv(fcf_list, terminal_value, wacc):\n    pv_fcf = sum(cf / (1 + wacc) ** (t + 1) for t, cf in enumerate(fcf_list))\n    pv_tv  = terminal_value / (1 + wacc) ** len(fcf_list)\n    return pv_fcf + pv_tv\n\n# 步驟 6：敏感度 ── 輸入：fcf_list, wacc_range, g_range ／ 執行：二維矩陣掃描 ／ 輸出：sensitivity DataFrame\ndef sensitivity_matrix(fcf_list, wacc_range, g_range):\n    pass  # 骨架：雙迴圈掃描 wacc × g，輸出 EV 矩陣\n\n# 步驟 7：交叉驗證 ── 輸入：dcf_ev, comps_ev_range ／ 執行：比對估值區間 ／ 輸出：驗證結論（string）\ndef cross_validate(dcf_ev, comps_ev_range):\n    pass  # 骨架：檢查 DCF 是否落在 comps 倍數估值區間內\n\n# 步驟 8：執行摘要 ── 輸入：前步各輸出 ／ 執行：組裝 key metrics ／ 輸出：summary dict\ndef build_summary(stock_id, wacc, ev, upside_pct):\n    return {'stock': stock_id, 'wacc': wacc, 'ev': ev, 'upside': upside_pct}\n\n# 步驟 9：輸出 ── 輸入：summary dict ／ 執行：寫出 CSV ／ 輸出：dcf_output.csv\ndef export_output(summary):\n    pd.DataFrame([summary]).to_csv('dcf_output.csv', index=False)\n    print('✅ DCF 九步驟骨架完整，輸出已存至 dcf_output.csv')\n\n# 示範執行步驟 1 + 2，其餘骨架待填\nfin = load_fundamentals('2330')\nwacc = calc_wacc()\nprint(f'步驟 1：已取數 {len(fin)} 筆｜步驟 2：WACC = {wacc:.2%}')\nprint('步驟 3–9 骨架已就位，依序填入後可重現完整 DCF 流程')",
       checklist: [
         "寫出某一檔台股的 DCF 九步驟流程文件（一頁即可）",
         "把『取數』封裝成可重複呼叫的函式 load_fundamentals()",
-        "為流程每一步定義輸入、輸出與負責人（可交接性）",
+        "標記每步驟的輸入資料、執行動作、輸出格式（例：WACC 步驟輸入 risk_free/beta → 執行加權計算 → 輸出 wacc 數值）",
         "用 initiating-coverage 五階段檢視自己的流程缺哪一段"
       ]
     },
@@ -56,7 +56,7 @@ const advancedSyllabus = {
         "用 audit-xls 的邏輯自我檢查：BS 是否平衡、現金是否勾稽、公式是否一致。",
         "理解『答對題目』與『交付一份能上會的成品』之間的差距。"
       ],
-      finmindCode: "import pandas as pd\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n# 交付物：一張同業可比（comps）表，輸出成 Excel\npeers = ['2330', '2303', '2454']  # 台積電、聯電、聯發科\nrows = []\nfor sid in peers:\n    fin = dl.taiwan_stock_financial_statement(stock_id=sid, start_date='2024-01-01')\n    piv = fin.pivot_table(index='date', columns='type', values='value', aggfunc='first')\n    last = piv.tail(1)\n    rows.append({'stock_id': sid,\n                 'Revenue': last.get('Revenue', pd.Series([None])).values[-1],\n                 'NetIncome': last.get('NetIncome', pd.Series([None])).values[-1]})\ncomps = pd.DataFrame(rows)\ncomps['NetMargin'] = comps['NetIncome'] / comps['Revenue']\n# 交付：輸出成機構可閱讀的 Excel 工作簿\ncomps.to_excel('comps_semiconductor.xlsx', index=False)\nprint('✅ 已產出可交付的 comps Excel：', comps.shape)",
+      finmindCode: "import pandas as pd\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n# 交付物：一張同業可比（comps）表，輸出成 Excel\npeers = ['2330', '2303', '2454']  # 台積電、聯電、聯發科\nrows = []\nfor sid in peers:\n    fin = dl.taiwan_stock_financial_statement(stock_id=sid, start_date='2024-01-01')\n    piv = fin.pivot_table(index='date', columns='type', values='value', aggfunc='first')\n    last = piv.tail(1)\n    rows.append({'stock_id': sid,\n                 'Revenue': last.get('Revenue', pd.Series([None])).values[-1],\n                 'NetIncome': last.get('NetIncome', pd.Series([None])).values[-1]})\ncomps = pd.DataFrame(rows)\ncomps['NetMargin'] = comps['NetIncome'] / comps['Revenue']\n# 交付：輸出成機構可閱讀的 Excel 工作簿\ncomps.to_excel('comps_semiconductor.xlsx', index=False)\nprint('✅ 已產出可交付的 comps Excel：', comps.shape)\n\n# audit_comps：自我檢查——公式一致性 + 單位一致性\ndef audit_comps(df):\n    results = []\n    # 公式審計：NetMargin 是否等於 NetIncome / Revenue\n    calc = df['NetIncome'] / df['Revenue']\n    diff = (calc - df['NetMargin']).abs()\n    if diff.dropna().lt(1e-6).all():\n        results.append('✅ NetMargin 公式一致')\n    else:\n        results.append('❌ NetMargin 計算與欄位不符，請確認')\n    # 單位審計：Revenue 與 NetIncome 數量級是否相符（避免億元 vs 元混用）\n    ratio = (df['Revenue'].abs() / df['NetIncome'].abs()).replace([float('inf')], None).dropna()\n    if ratio.gt(1000).any() or ratio.lt(0.001).any():\n        results.append('⚠️  Revenue 與 NetIncome 數量級差異過大，請確認單位')\n    else:\n        results.append('✅ 單位量級一致')\n    return results\n\nfor r in audit_comps(comps):\n    print(r)",
       checklist: [
         "產出一份至少 3 檔同業的 comps Excel 表",
         "對 Excel 做一次 audit：檢查公式、單位、勾稽一致性",
@@ -81,7 +81,7 @@ const advancedSyllabus = {
         "建立一套量化篩選條件，從台股池子篩出候選標的。",
         "區分『數據觀察』與『投資判斷』——後者要承擔對錯。"
       ],
-      finmindCode: "import pandas as pd\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n# 從原始數據 → 形成一個可驗證的多空訊號\nrev = dl.taiwan_stock_month_revenue(stock_id='2330', start_date='2023-01-01')\nrev = rev.sort_values('date')\n# 計算月營收年增率（YoY）作為動能訊號\nrev['yoy'] = rev['revenue'].pct_change(12) * 100\nlatest = rev.tail(1).iloc[0]\n\n# 把數據轉成『論點』：不是描述，而是判斷 + 理由 + 可證偽條件\nthesis = {\n    '標的': '2330',\n    '方向': '看多' if latest['yoy'] > 10 else '中性',\n    '理由': f\"最新月營收 YoY = {latest['yoy']:.1f}%，動能{'轉強' if latest['yoy']>10 else '持平'}\",\n    '證偽條件': '若連續兩個月 YoY 轉負，論點失效'\n}\nprint('📌 投資論點：', thesis)",
+      finmindCode: "import pandas as pd\nimport datetime\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n\n# 擴展至股票池（5 檔），計算每檔最新 YoY 動能指標\npool = ['2330', '2303', '2454', '2317', '2382']  # 台積電、聯電、聯發科、鴻海、廣達\nrows = []\nfor sid in pool:\n    rev = dl.taiwan_stock_month_revenue(stock_id=sid, start_date='2023-01-01').sort_values('date')\n    rev['yoy'] = rev['revenue'].pct_change(12) * 100\n    latest = rev.tail(1).iloc[0]\n    rows.append({'stock_id': sid, 'date': latest['date'], 'yoy': round(latest['yoy'], 1)})\n\nmomentum_df = pd.DataFrame(rows)\nprint('── 全池 YoY 動能 ──')\nprint(momentum_df.to_string(index=False))\n\n# 篩選條件：YoY > 15% 為動能轉強候選\nTHRESHOLD = 15\ncandidates = momentum_df[momentum_df['yoy'] > THRESHOLD]\nprint(f'\\n── 候選清單（YoY > {THRESHOLD}%）──')\nprint(candidates.to_string(index=False) if not candidates.empty else '（無符合標的）')\n\n# Thesis Tracker：把論點登錄至 CSV（方向 / 理由 / 證偽條件 / 登錄日期）\ntoday = datetime.date.today().isoformat()\ntracker_rows = []\nfor _, row in candidates.iterrows():\n    tracker_rows.append({\n        '標的': row['stock_id'],\n        '方向': '看多',\n        '理由': f\"月營收 YoY = {row['yoy']}%，動能轉強\",\n        '證偽條件': '連續兩個月 YoY 跌破 0% 則失效',\n        '登錄日期': today\n    })\ntracker = pd.DataFrame(tracker_rows)\ntracker.to_csv('thesis_tracker.csv', index=False, encoding='utf-8-sig')\nprint(f'\\n✅ 已把 {len(tracker)} 筆論點寫入 thesis_tracker.csv')",
       checklist: [
         "為一檔台股寫出一句含『方向 + 理由 + 證偽條件』的投資論點",
         "建立一組量化篩選條件並跑出候選清單",
@@ -106,12 +106,13 @@ const advancedSyllabus = {
         "建立三大報表連動（損益→資產負債→現金流）的預測模型。",
         "做出 WACC × 永續成長率的二維敏感度矩陣並解讀。"
       ],
-      finmindCode: "import numpy as np\n\n# 端到端 DCF 的核心：用台灣在地參數，而非照搬美股\nrisk_free = 0.015    # 台灣 10 年期公債殖利率（範例值，需更新）\nerp = 0.06           # 台股市場風險溢酬（範例值）\nbeta = 1.1\ncost_equity = risk_free + beta * erp\nwacc = cost_equity   # 簡化：假設全權益；實務需加權負債成本\n\nfcf = [100, 115, 132, 152, 175]  # 五年自由現金流預測（百萬）\ng = 0.02                          # 永續成長率\npv = sum(cf / (1 + wacc) ** (t + 1) for t, cf in enumerate(fcf))\ntv = fcf[-1] * (1 + g) / (wacc - g)\npv_tv = tv / (1 + wacc) ** len(fcf)\nev = pv + pv_tv\nprint(f'WACC={wacc:.2%}  企業價值 EV ≈ {ev:,.0f} 百萬')\n\n# 敏感度：WACC ±1% 對估值的衝擊\nfor w in [wacc - 0.01, wacc, wacc + 0.01]:\n    tv_w = fcf[-1] * (1 + g) / (w - g)\n    ev_w = sum(cf/(1+w)**(t+1) for t,cf in enumerate(fcf)) + tv_w/(1+w)**len(fcf)\n    print(f'  WACC={w:.2%} → EV={ev_w:,.0f}')",
+      finmindCode: "import numpy as np\nimport pandas as pd\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n\n# 步驟 1：從 FinMind 取真實財報數據，計算歷史 FCF（OCF - Capex）\nfin = dl.taiwan_stock_financial_statement(stock_id='2330', start_date='2022-01-01')\npiv = fin.pivot_table(index='date', columns='type', values='value', aggfunc='first')\n\nocf   = piv.get('OperatingCashFlow',  pd.Series(dtype=float)).dropna().tail(5)\ncapex = piv.get('CapitalExpenditure', pd.Series(dtype=float)).dropna().abs().tail(5)\nfcf_hist = ocf.values[:len(capex)] - capex.values[:len(ocf)]\n\n# 步驟 2：以線性趨勢外推預測未來 5 年 FCF（假設：歷史平均斜率延伸）\nif len(fcf_hist) >= 2:\n    slope = (fcf_hist[-1] - fcf_hist[0]) / max(len(fcf_hist) - 1, 1)\n    fcf = [float(fcf_hist[-1]) + slope * (i + 1) for i in range(5)]\nelse:\n    fcf = [100, 115, 132, 152, 175]  # 資料不足時的後備值\nprint(f'FCF 預測（5 年，百萬）：{[round(v) for v in fcf]}  ← 線性趨勢外推')\n\n# 步驟 3：WACC（台灣在地參數）\nrisk_free = 0.015    # 台灣 10 年期公債殖利率\nerp = 0.06           # 台股市場風險溢酬\nbeta = 1.1\nwacc = risk_free + beta * erp  # 簡化全權益版\n\ng = 0.02\npv    = sum(cf / (1 + wacc) ** (t + 1) for t, cf in enumerate(fcf))\ntv    = fcf[-1] * (1 + g) / (wacc - g)\npv_tv = tv / (1 + wacc) ** len(fcf)\nev    = pv + pv_tv\nprint(f'WACC={wacc:.2%}  企業價值 EV ≈ {ev:,.0f} 百萬')\n\n# 步驟 4：敏感度矩陣\nfor w in [wacc - 0.01, wacc, wacc + 0.01]:\n    tv_w  = fcf[-1] * (1 + g) / (w - g)\n    ev_w  = sum(cf/(1+w)**(t+1) for t,cf in enumerate(fcf)) + tv_w/(1+w)**len(fcf)\n    print(f'  WACC={w:.2%} → EV={ev_w:,.0f}')",
       checklist: [
         "用台灣公債殖利率與台股 ERP 算出一個 WACC（寫下假設來源）",
         "建立五年 FCF 預測並計算 EV",
         "做出 WACC × g 的二維敏感度表",
-        "用 audit 邏輯確認模型沒有循環參照與單位錯誤"
+        "用 audit 邏輯確認模型沒有循環參照與單位錯誤",
+        "完成 FinMind 取數 → FCF 計算 → 敏感度分析 → 估值摘要的完整流程，並記錄每步的輸入來源與輸出用途"
       ]
     },
     {
@@ -159,8 +160,8 @@ const advancedSyllabus = {
       finmindCode: "from FinMind.data import DataLoader\n\ndl = DataLoader()\n# FinMind 提供新聞，但『逐字稿』需另尋來源（公開資訊觀測站／券商）\n# 這裡示範：用新聞流做財報季的事件對齊\nnews = dl.taiwan_stock_news(stock_id='2330', start_date='2025-01-01')\nkw = ['法說', '財報', '展望', '毛利', '財測', '指引']\nnews['hit'] = news['title'].fillna('').apply(lambda t: any(k in t for k in kw))\nevents = news[news['hit']][['date', 'title']].tail(10)\nprint('📅 財報/法說相關事件流：')\nprint(events.to_string(index=False))\nprint('\\n⚠️ 提醒：beat/miss 與語氣判讀需取得「逐字稿 + 市場預估」，FinMind 不含此資料')",
       checklist: [
         "列出一檔台股未來一季的財報與法說日程",
-        "找出該公司上一季的市場預估並標記 beat/miss",
-        "讀一份法說逐字稿，摘出 3 個管理層語氣訊號",
+        "找出該公司上一季的市場預估並標記 beat/miss（市場預估來源：CMONEY 個股預估、各大券商研報 EPS 共識）",
+        "讀一份法說逐字稿，摘出 3 個管理層語氣訊號（逐字稿來源：公開資訊觀測站 MOPS 重大訊息、公司 IR 官網、券商法說摘要）",
         "寫一段財報前的多空情境（earnings-preview）"
       ]
     },
@@ -181,7 +182,7 @@ const advancedSyllabus = {
         "掌握台灣在地時間節點：月營收（每月 10 日前）、除權息季、季報公告。",
         "把美規數據源（SEC/EDGAR）對應替換為公開資訊觀測站／TEJ。"
       ],
-      finmindCode: "from FinMind.data import DataLoader\nimport datetime as dt\n\ndl = DataLoader()\n# 在地化合規：建立『台股關鍵時程』檢查，避免錯過法定揭露窗口\nrev = dl.taiwan_stock_month_revenue(stock_id='2330', start_date='2025-01-01')\nrev = rev.sort_values('date')\nlast = rev.tail(1).iloc[0]\nprint(f\"最新月營收資料月份：{last['date']}\")\nprint('提醒：台股月營收須於次月 10 日前公告——研究排程應對齊此窗口')\n\n# 在報告底部自動帶出合規揭露模板\ndisclosure = '【揭露】本研究僅供參考，作者及所屬機構與標的之持股/利益關係：______。'\nprint(disclosure)",
+      finmindCode: "from FinMind.data import DataLoader\nimport datetime as dt\n\ndl = DataLoader()\n\n# 一、月營收時程（原有）── 輸入：stock_id ／ 輸出：最新月份提示\nrev = dl.taiwan_stock_month_revenue(stock_id='2330', start_date='2025-01-01').sort_values('date')\nlast = rev.tail(1).iloc[0]\nprint(f\"月營收最新資料：{last['date']}（提醒：次月 10 日前公告）\")\n\n# 二、除權息時程（新增）── 輸入：stock_id ／ 執行：取除息事件 ／ 輸出：除息日 + 金額\ndiv = dl.taiwan_stock_dividend(stock_id='2330', start_date='2024-01-01')\nif not div.empty:\n    cols = [c for c in ['date', 'CashDividend', 'StockDividend'] if c in div.columns]\n    print(div[cols].tail(5).to_string(index=False))\nprint('提醒：觀察除息日後填息速度，是判斷市場信心的訊號')\n\n# 三、季報公告月份提示（新增）\nQUARTERLY_MONTHS = [3, 5, 8, 11]  # 台灣季報：Q4/Q1/Q2/Q3 分別於 3/5/8/11 月公告\nprint(f'台灣季報公告月份：{QUARTERLY_MONTHS}（佈局應提前 2–3 週）')\n\n# 四、美規 → 台規欄位對照（新增）── 輸入：美規欄位名稱 ／ 輸出：FinMind type 欄位值\nus_to_tw = {\n    'EPS':           'EPS',\n    'Net Income':    'NetIncome',\n    'Revenue':       'Revenue',\n    'Total Assets':  'TotalAssets',\n    'Gross Profit':  'GrossProfit',\n    'Operating CF':  'OperatingCashFlow',\n}\nprint('\\n美規 → FinMind 欄位對照：')\nfor us, tw in us_to_tw.items():\n    print(f'  {us:20s} → {tw}')\n\n# 五、合規揭露模板（原有）\ndisclosure = '【揭露】本研究僅供參考，作者及所屬機構與標的之持股/利益關係：______。'\nprint(f'\\n{disclosure}')",
       checklist: [
         "在你的報告模板加入利益衝突揭露段落",
         "列出一檔台股本年度的月營收/除權息/季報時程表",
@@ -211,7 +212,7 @@ const advancedSyllabus = {
         "為一檔台股建立催化劑行事曆（至少 5 個事件）",
         "寫一個『季報更新模型』的標準流程",
         "設定一個重大變動的警示門檻並說明理由",
-        "連續追蹤同一檔標的至少兩個資料週期並記錄變化"
+        "用程式碼比較同一標的最近 6 個月的月營收數據，標記至少 3 個重大變動時間點（YoY 變化 > ±15%），並為每個時間點寫一句更新理由"
       ]
     },
     {
