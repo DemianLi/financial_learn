@@ -1,0 +1,1600 @@
+/* styles.css - FinMath Map Premium Design System */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* HSL Color System */
+  --bg-primary: #070913;
+  --bg-secondary: #0c1020;
+  --bg-card: rgba(15, 23, 42, 0.6);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.2);
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  /* Subject Accents */
+  --subject-a: hsl(142, 65%, 48%); /* Emerald — completion / correct */
+  --subject-b: hsl(187, 80%, 42%); /* Cyan — primary interaction accent */
+  --subject-c: hsl(263, 55%, 60%); /* Purple — muted, subject label only */
+  --subject-d: hsl(24, 85%, 52%);  /* Amber */
+  --subject-e: hsl(340, 70%, 50%);  /* Crimson */
+  --subject-f: hsl(26, 80%, 55%);   /* Orange */
+
+  --shadow-glow: rgba(6, 182, 212, 0.12);
+
+  /* Fonts */
+  --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: 'JetBrains Mono', "Courier New", monospace;
+  
+  --transition-smooth: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --border-radius-lg: 16px;
+  --border-radius-md: 10px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(ellipse at 88% 94%, rgba(6, 182, 212, 0.06) 0px, transparent 52%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Typography & Layout Utilities */
+h1, h2, h3, h4 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+}
+
+.glow-text {
+  text-shadow: 0 0 12px var(--shadow-glow);
+}
+
+/* App Wrapper */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0.8rem 1.2rem;
+}
+
+/* Header Section */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1rem;
+}
+
+.logo-section h1 {
+  font-size: 1.4rem;
+  background: linear-gradient(135deg, #fff 30%, var(--subject-b) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-section p {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-top: 0.1rem;
+}
+
+/* Header Action Buttons */
+.header-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.header-actions .btn {
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+}
+
+#btnHamburger {
+  display: none;
+  font-size: 1.3rem;
+  padding: 0.4rem 0.7rem;
+  margin-left: auto;
+}
+
+.btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--border-radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--transition-smooth);
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--subject-b) 0%, rgba(13, 148, 136, 0.8) 100%);
+  border: none;
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--subject-b) 20%, rgba(13, 148, 136, 1) 100%);
+  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+  transform: translateY(-2px);
+}
+
+.badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Dashboard Layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+/* Left Panel - Interactive Map (Reconfigured to 1:2 Golden Ratio Widescreen Layout) */
+.panel-left {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.2rem;
+  align-items: stretch;
+}
+
+/* Card Structure */
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 1.5rem;
+  transition: var(--transition-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card:hover {
+  border-color: rgba(6, 182, 212, 0.2);
+}
+
+/* Progress Radar Card - Restructured to stacked layout for widescreen panel alignment */
+.progress-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.2rem;
+  height: 100%;
+}
+
+.progress-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.progress-header {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--subject-a) 0%, var(--subject-b) 100%);
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.subject-scores {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.score-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.4rem;
+}
+
+/* Radar Canvas Container */
+.radar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  height: 160px;
+}
+
+.radar-container canvas {
+  width: 100%;
+  height: 100%;
+  max-width: 160px;
+  max-height: 160px;
+}
+
+/* SVG Learning Map Panel */
+.map-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 650px;
+}
+
+.map-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.map-card-header h3 {
+  font-size: 1.1rem;
+}
+
+.map-instructions {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Syllabus Interactive Map Wrapper */
+.syllabus-map-wrapper {
+  flex: 1;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  background: rgba(7, 9, 19, 0.4);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.syllabus-svg-map {
+  width: 100%;
+  height: 100%;
+  min-height: 580px;
+}
+
+/* Map SVG Elements */
+.map-link-line {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 2.5;
+  stroke-dasharray: 4 4;
+  transition: var(--transition-smooth);
+}
+
+.map-link-line.active {
+  stroke: var(--subject-b);
+  stroke-width: 3.5;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.4));
+}
+
+.map-link-line.completed {
+  stroke: var(--subject-a);
+  stroke-dasharray: none;
+}
+
+.map-node-group {
+  cursor: pointer;
+}
+
+.map-node-circle {
+  fill: var(--bg-secondary);
+  stroke: var(--border-color);
+  stroke-width: 2.5;
+  transition: var(--transition-smooth);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.map-node-group:hover .map-node-circle {
+  stroke: var(--text-primary);
+  transform: scale(1.1);
+  transform-origin: center;
+}
+
+.map-node-group.active .map-node-circle {
+  stroke-width: 4;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+.map-node-group.completed .map-node-circle {
+  fill: rgba(16, 185, 129, 0.15);
+}
+
+.map-node-group.completed .map-node-check {
+  display: block;
+}
+
+.map-node-text {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--text-secondary);
+  text-anchor: middle;
+  transition: var(--transition-smooth);
+  pointer-events: none;
+}
+
+.map-node-group:hover .map-node-text,
+.map-node-group.active .map-node-text {
+  fill: var(--text-primary);
+  font-weight: 700;
+}
+
+.map-subject-label {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--text-primary);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+/* Right Panel - Content Details Drawer (Slide-over overlay - Reconfigured to 3/5 viewport width) */
+.panel-right {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 60vw; /* 3/5 of viewport width for spacious code/formula layout */
+  max-width: 95%;
+  height: 100vh;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-left: 1px solid var(--border-color);
+  box-shadow: -10px 0 35px rgba(0, 0, 0, 0.5);
+  transform: translateX(100%); /* Offscreen by default */
+  /* backdrop-filter creates a GPU composited layer that can intercept touch
+     events on mobile Chrome even when translateX(100%) is off-screen.
+     visibility:hidden is the only browser-guaranteed way to fully remove the
+     layer from touch hit-testing. Delay matches the slide-out duration. */
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0s linear 0.4s;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-right.active {
+  transform: translateX(0); /* Slide in */
+  visibility: visible;
+  pointer-events: auto;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0s linear 0s;
+}
+
+.detail-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  background: transparent; /* Seamless blend */
+  border: none;
+  border-radius: 0;
+}
+
+.detail-header {
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: rgba(15, 23, 42, 0.4);
+  flex-shrink: 0;
+}
+
+.detail-subject-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  color: #fff;
+}
+
+.detail-title {
+  font-size: 1.4rem;
+}
+
+.detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+}
+
+/* Math Analogy CSS */
+.analogy-section {
+  position: relative;
+  padding-left: 1rem;
+  border-left: 3px solid var(--subject-b);
+}
+
+.analogy-section h4 {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  margin-bottom: 0.5rem;
+}
+
+.analogy-text {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Math Formula - Expanded double-height layout with Flexbox alignment & enlarged typesetting */
+.formula-container {
+  background: rgba(7, 9, 19, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--border-radius-md);
+  padding: 2.4rem 1.5rem; /* Double vertical padding (2.4rem) for expansive formula displays */
+  min-height: 140px; /* Enhanced minimum height for full multi-line/matrix equation visibility */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.2rem; /* Enlarge equation font size for premium legibility */
+  position: relative;
+  overflow-x: auto;
+}
+
+.formula-container::before {
+  content: 'Math Formula';
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Custom Math Formula & KaTeX Spacing Refinements */
+.formula-block {
+  display: block;
+  margin: 1rem auto;
+  overflow-x: auto;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.01);
+  border-radius: var(--border-radius-md);
+  text-align: center;
+  width: 100%;
+}
+
+.formula-inline {
+  display: inline-block;
+  padding: 0 0.3rem;
+  font-family: inherit;
+  color: var(--text-primary);
+}
+
+/* Compact display mode margins inside formula container */
+.formula-container .katex-display {
+  margin: 0.3rem 0;
+}
+
+/* Learning Objectives */
+.objectives-section h4,
+.code-section h4,
+.exam-section h4 {
+  font-size: 1rem;
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.objectives-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.objectives-list li {
+  position: relative;
+  padding-left: 1.2rem;
+}
+
+.objectives-list li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--subject-b);
+  font-weight: 700;
+}
+
+/* Wall Street Alignment Card */
+.skill-align-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.skill-align-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.skill-align-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.skill-align-badge {
+  background: rgba(6, 182, 212, 0.1);
+  color: var(--subject-b);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+}
+
+.skill-align-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* FinMind Code Block Section */
+.code-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.code-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.code-wrapper {
+  position: relative;
+  background: #05070e;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  overflow: hidden;
+}
+
+.code-wrapper pre {
+  padding: 1.2rem;
+  overflow-x: auto;
+  color: #cbd5e1;
+}
+
+/* Copy Button Overlay */
+.btn-copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10; /* Float securely on top of code text inside wrapper */
+  background: rgba(15, 23, 42, 0.8); /* Semi-transparent backplate for legibility */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.btn-copy:hover {
+  background: var(--subject-b);
+  color: #fff;
+  border-color: var(--subject-b);
+}
+
+/* Exam Section Styles */
+.exam-section {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.exam-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  background: linear-gradient(135deg, var(--subject-d) 0%, #d97706 100%);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.exam-question {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.exam-options-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+}
+
+.exam-option-btn {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 0.8rem 1rem;
+  color: var(--text-secondary);
+  text-align: left;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.exam-option-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  transform: translateX(4px);
+}
+
+.exam-option-letter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.exam-option-btn:hover .exam-option-letter {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+
+/* Exam Option States */
+.exam-option-btn.correct {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: var(--subject-a) !important;
+  color: #10b981 !important;
+}
+
+.exam-option-btn.correct .exam-option-letter {
+  background: var(--subject-a) !important;
+  color: #fff !important;
+}
+
+.exam-option-btn.wrong {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: #ef4444 !important;
+  color: #f87171 !important;
+}
+
+.exam-option-btn.wrong .exam-option-letter {
+  background: #ef4444 !important;
+  color: #fff !important;
+}
+
+/* Explanation Container */
+.exam-explanation-box {
+  background: rgba(15, 23, 42, 0.8);
+  border-top: 2px solid var(--subject-a);
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+  padding: 1.2rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: none;
+  animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.exam-explanation-title {
+  font-weight: 700;
+  color: var(--subject-a);
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Exam layout: pin ABCD options so they never scroll off screen on long questions.
+   modal-body becomes a flex container so exam-question-card can use flex:1 instead
+   of height:100% — the latter is unreliable in Safari when the parent height comes
+   from a flex algorithm rather than an explicit value. */
+.modal-body.exam-body-layout {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.exam-question-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.exam-q-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.exam-q-scroll {
+  flex: 1;
+  min-height: 0; /* allow shrink to 0 so exam-q-options stays pinned on long questions */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem 1.5rem 0.5rem;
+  background:
+    linear-gradient(var(--bg-secondary) 30%, rgba(12, 16, 32, 0))  center top    / 100% 2.5rem no-repeat local,
+    linear-gradient(rgba(12, 16, 32, 0), var(--bg-secondary) 70%) center bottom / 100% 3rem   no-repeat local;
+  background-color: var(--bg-secondary);
+}
+
+.exam-q-options {
+  flex-shrink: 0;
+  padding: 0.75rem 1.5rem 1rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+/* Empty State Details Card */
+.detail-empty-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 2.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  gap: 1.2rem;
+}
+
+.detail-empty-state-icon {
+  font-size: 3rem;
+  color: var(--text-muted);
+  opacity: 0.4;
+  animation: floatNode 3s ease-in-out infinite;
+}
+
+/* Mock Exam Center Overlay Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(7, 9, 19, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  /* visibility switches to hidden AFTER opacity fades out (0.3s delay on close) */
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  /* visibility shows IMMEDIATELY on open, then opacity fades in */
+  transition: opacity 0.3s ease, visibility 0s linear 0s;
+}
+}
+
+.modal-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  max-width: 650px;
+  width: 90%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* clips border-radius on older browsers */
+  overflow: clip;   /* modern: clips without creating a scroll-blocking BFC */
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  transform: scale(0.92);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-overlay.active .modal-box {
+  transform: scale(1);
+}
+
+.modal-header {
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  flex: 1;
+  min-height: 0; /* flex 預設 min-height:auto 會讓 body 撐到內容高度，overflow-y:auto 永遠不觸發；0 讓 flex-shrink 生效 */
+  /* Scroll-shadow: local gradients hide the shadow when flush at top/bottom */
+  background:
+    linear-gradient(var(--bg-secondary) 30%, rgba(12, 16, 32, 0))  center top    / 100% 2.5rem no-repeat local,
+    linear-gradient(rgba(12, 16, 32, 0), var(--bg-secondary) 70%) center bottom / 100% 4rem   no-repeat local,
+    radial-gradient(farthest-side at 50% 100%, rgba(6, 182, 212, 0.12), transparent) bottom / 100% 2rem no-repeat scroll;
+  background-color: var(--bg-secondary);
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  flex-shrink: 0;
+}
+
+/* Exam Mode Box Details */
+.exam-intro-box {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.exam-rules-list {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 1rem;
+  list-style: none;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Code Sandbox Component */
+.sandbox-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Sandbox code output block — height capped on desktop, freed on mobile */
+.sandbox-output-wrapper {
+  max-height: 250px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Magic scroll-shadow: the 'local' covers travel with content and hide
+     the shadows when the scroll edge is reached. The 'scroll' shadow stays
+     fixed, creating a fade that signals more content exists below/above. */
+  background:
+    linear-gradient(#05070e 30%, transparent)           center top    / 100% 2rem   no-repeat local,
+    linear-gradient(transparent, #05070e 70%)           center bottom / 100% 3.5rem no-repeat local,
+    radial-gradient(farthest-side at 50% 100%, rgba(6,182,212,0.12), transparent) center bottom / 100% 2rem no-repeat scroll;
+  background-color: #05070e;
+}
+
+.sandbox-form-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.form-select,
+.form-input {
+  background: rgba(7, 9, 19, 0.8);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  color: var(--text-primary);
+  padding: 0.6rem;
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: var(--transition-smooth);
+  width: 100%;
+}
+
+.form-select:focus,
+.form-input:focus {
+  border-color: var(--subject-b);
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.2);
+}
+
+/* Prevent scroll chaining: inner modal content stops at its own scroll boundary */
+.modal-body,
+.detail-body,
+.ai-col-left,
+.ai-col-right,
+.ai-terminal {
+  overscroll-behavior: contain;
+}
+
+/* Keyframes Animations */
+@keyframes floatNode {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom Modal Results Sheet */
+.result-sheet {
+  text-align: center;
+  padding: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.result-rank-ring {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--subject-a) 0%, var(--subject-b) 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 10px 25px rgba(6, 182, 212, 0.28);
+}
+
+.result-score {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+/* Footer Section */
+footer {
+  text-align: center;
+  padding-top: 2rem;
+  margin-top: 2rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+footer a {
+  color: var(--subject-b);
+  text-decoration: none;
+  transition: var(--transition-smooth);
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* Disclaimer span — base styles (was inline) */
+footer .footer-disclaimer {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-top: 0.4rem;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .panel-left {
+    grid-template-columns: 1fr; /* Stack layout on tablets */
+  }
+  .progress-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Restore side-by-side progress info/radar internally on tablet */
+  }
+}
+
+@media (max-width: 640px) {
+  .app-container {
+    padding: 0.8rem;
+  }
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .progress-card {
+    grid-template-columns: 1fr;
+  }
+  .sandbox-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Premium Styles for Locked Nodes */
+.map-node-group.locked .map-node-circle {
+  fill: #131722 !important;
+  stroke: #334155 !important;
+  stroke-opacity: 0.6;
+}
+.map-node-group.locked:hover .map-node-circle {
+  transform: none !important;
+  cursor: not-allowed !important;
+}
+.map-node-group.locked .map-node-text {
+  fill: #475569 !important;
+  font-weight: 500 !important;
+}
+.map-node-group.locked text {
+  cursor: not-allowed !important;
+}
+
+/* Sensitivity Table Layout */
+.sensitivity-table th, .sensitivity-table td {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.4rem;
+  transition: all 0.25s ease;
+  font-family: var(--font-mono);
+}
+.sensitivity-table th {
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text-secondary);
+}
+
+/* Widescreen Viewport-fit Electronic Billboard Layout (No Page-level Scroll) */
+@media (min-width: 1025px) {
+  html, body {
+    height: 100vh;
+    overflow: hidden; /* Lock page scrolling completely */
+  }
+  
+  .app-container {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  .dashboard-grid {
+    height: calc(100vh - 5.5rem); /* Subtract header and footer height */
+    overflow: hidden;
+    min-height: 0;
+  }
+  
+  .panel-left {
+    height: 100%;
+    overflow: hidden;
+    min-height: 0;
+  }
+  
+  .map-card {
+    height: 100%;
+    min-height: 0 !important; /* Override fixed height to fit vertical viewport */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .syllabus-map-wrapper {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+  }
+  
+  .syllabus-svg-map {
+    height: 100%;
+    min-height: 0 !important;
+  }
+  
+  footer {
+    padding-top: 0.6rem !important;
+    margin-top: 0.6rem !important;
+  }
+}
+
+/* ===================================================================
+   行動版 RWD — @media (max-width: 768px)
+   桌機（≥1025px）的 billboard layout 完全不受影響。
+   =================================================================== */
+@media (max-width: 768px) {
+
+  /* --- Candidate C: SVG 地圖縮放 + 可捲動 --- */
+  .map-card {
+    min-height: 0 !important;
+  }
+  .syllabus-map-wrapper {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: 70vh;
+  }
+  .syllabus-svg-map {
+    min-height: 0 !important;   /* 移除 580px 硬編碼，改由 viewBox 比例自動縮放 */
+    height: auto;
+    width: 100%;
+  }
+
+  /* --- Candidate A: Detail Drawer → Bottom Sheet --- */
+  .panel-right {
+    width: 100vw;
+    max-width: 100vw;
+    height: 88dvh;              /* dynamic viewport height，避免 iOS 工具列閃爍 */
+    top: auto;
+    bottom: 0;
+    right: 0;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(105%);  /* 預設藏到底部（稍微超出，確保隱藏）*/
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0s linear 0.4s;
+  }
+  .panel-right.active {
+    transform: translateY(0);    /* 向上滑入 */
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0s linear 0s;
+  }
+  /* 拖拉把手 */
+  .detail-card::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    margin: 10px auto 0;
+    flex-shrink: 0;
+  }
+  /* detail-card is the flex column container; detail-body handles scrolling */
+  .detail-card {
+    overflow: hidden;
+  }
+
+  /* --- Candidate B: Header 壓縮 + 漢堡選單 --- */
+  header {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    padding-bottom: 0.5rem;
+    position: relative;
+  }
+  .logo-section h1 {
+    font-size: 1rem;
+  }
+  .logo-section p {
+    display: none;
+  }
+  #btnHamburger {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+  /* 手機上 header-actions 變成下拉選單，預設隱藏 */
+  .header-actions {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    flex-direction: column;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 0.4rem;
+    gap: 0.25rem;
+    min-width: 180px;
+    z-index: 300;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  }
+  .header-actions.menu-open {
+    display: flex;
+  }
+  /* 下拉選單內按鈕還原正常文字樣式，全寬橫排 */
+  .header-actions .btn {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    padding: 0.55rem 0.9rem;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.45rem;
+    text-align: left;
+  }
+  /* 保留錯題本角標可見 */
+  #btnMistakes { position: relative; }
+  #stMistakeBadge {
+    font-size: 0.6rem !important;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+  }
+
+  /* --- Candidate D: Modals 全螢幕 --- */
+  /* Fix iOS Safari 100vh large-viewport bug: overlay must match visual viewport
+     so the flex-centered modal-box bottom doesn't fall behind Safari's toolbar. */
+  .modal-overlay {
+    height: var(--real-vh, 100dvh);
+    align-items: flex-start;
+  }
+  .modal-box {
+    width: 100vw;
+    max-width: 100vw;
+    /* --real-vh (visualViewport.height) handles Chrome iOS persistent bottom toolbar.
+       min() caps it at 100svh so a stale large-viewport --real-vh (Safari URL bar
+       hidden before modal opens) never pushes the footer off-screen.
+       Chrome iOS: --real-vh < 100svh → min picks --real-vh ✓
+       Safari URL-bar hidden: --real-vh > 100svh → min picks 100svh ✓
+       Safari URL-bar visible: equal → either works ✓ */
+    height: var(--real-vh, 100svh);
+    height: min(var(--real-vh, 100svh), 100svh);
+    max-height: var(--real-vh, 100svh);
+    max-height: min(var(--real-vh, 100svh), 100svh);
+    border-radius: 0;
+    margin: 0;
+    transform: scale(1);
+    transition: none;
+  }
+  .modal-overlay.active .modal-box {
+    transform: scale(1);
+  }
+  /* KaTeX display 讓外層 formula-container 負責橫向捲動，自身不建立捲動容器 */
+  .katex-display {
+    overflow-x: visible;
+    overflow-y: visible;
+  }
+  /* formula-container 在手機改為 block，單一橫向捲動容器 */
+  .formula-container {
+    display: block;
+    text-align: center;
+    min-height: 135px;
+    padding: 1.5rem 1rem;
+    font-size: 1.2rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* 模擬考全螢幕：答題選項縱向排列 */
+  .options-grid {
+    grid-template-columns: 1fr !important;
+  }
+  /* 研究筆記 modal 全螢幕 */
+  #researchNoteModal > div {
+    max-width: 100vw;
+    margin: 0;
+    border-radius: 0;
+    min-height: 100dvh;
+    padding: 1rem;
+  }
+
+  /* 沙盒 modal：顯式 flex 結構確保 iOS Safari 捲動正常
+     iOS 不一定把 flex 演算法計算出的高度視為 definite height，
+     改為 modal-body 擔任 overflow:hidden 的 flex 容器，
+     sandbox-card 本身成為 flex:1 + overflow-y:auto 的捲動區，
+     與 exam-body-layout 的模式一致。 */
+  #sandboxModal .modal-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+  }
+  .sandbox-card {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+  /* 代碼區塊在卡片捲動的前提下展開顯示，不需要自己的捲動容器 */
+  .sandbox-output-wrapper {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  /* ── 手機版 Footer ─────────────────────────────── */
+  footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.55rem;
+    text-align: left;
+    padding-top: 1.4rem;
+    margin-top: 1.4rem;
+  }
+  footer .footer-credit {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+  }
+  footer .footer-links {
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+  footer .footer-disclaimer {
+    margin-top: 0;
+    padding: 0.6rem 0.75rem;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: 0 6px 6px 0;
+    font-size: 0.73rem;
+    line-height: 1.65;
+  }
+}
+
+/* ── Skills 56 Modal ─────────────────────────────────────────── */
+.footer-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent-green);
+  font: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity 0.15s;
+}
+.footer-link-btn:hover { opacity: 0.75; }
+
+.skills-modal-box {
+  max-width: 820px;
+  width: 94vw;
+}
+
+.skills-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  max-height: 68vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.25rem;
+}
+
+/* Plugin block */
+.sp-block {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.sp-hd {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  user-select: none;
+}
+.sp-hd:hover { background: rgba(255,255,255,0.07); }
+.sp-block:not(.expanded) .sp-hd { border-bottom: none; }
+
+.sp-name {
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.sp-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+}
+.sp-core {
+  background: rgba(0,255,136,0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(0,255,136,0.3);
+}
+.sp-addon {
+  background: rgba(255,255,255,0.06);
+  color: var(--sp-c, hsl(187,92%,45%));
+  border: 1px solid var(--sp-c, hsl(187,92%,45%));
+}
+.sp-partner {
+  background: rgba(255,255,255,0.06);
+  color: var(--sp-c, hsl(48,96%,60%));
+  border: 1px solid var(--sp-c, hsl(48,96%,60%));
+}
+
+.sp-cnt {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.sp-chevron {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: transform 0.25s ease;
+  display: inline-block;
+}
+.sp-block.expanded .sp-chevron { transform: rotate(90deg); }
+
+/* Skill rows — collapsed by default, expanded via accordion */
+.sp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+.sp-block.expanded .sp-grid { max-height: 2000px; }
+
+.sk-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 1rem;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.15s;
+}
+.sk-row:nth-child(even) { border-right: none; }
+.sk-row:hover { background: rgba(255,255,255,0.03); }
+
+.sk-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-green);
+  background: none;
+  padding: 0;
+  letter-spacing: 0.01em;
+}
+
+.sk-desc {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+@media (max-width: 600px) {
+  .sp-grid { grid-template-columns: 1fr; }
+  .sk-row { border-right: none; }
+  .skills-modal-body { max-height: 60vh; }
+  .sk-name { font-size: 0.85rem; }
+  .sk-desc { font-size: 0.78rem; }
+}

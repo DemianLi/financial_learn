@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>FinMath Map | 量化金融與籌碼力學學習地圖</title>
   <meta name="description" content="一個將公司估值、消息判斷與籌碼分析系統化拆解為高中數學考綱科目（坐標系、向量幾何、線性代數與機率論）的互動式量化投資學習地圖。">
-  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0a0f'/><polyline points='4,24 10,16 16,20 22,10 28,14' fill='none' stroke='%2300ff88' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='22' cy='10' r='2' fill='%2300ff88'/></svg>">
+
   <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="advancedMode.css">
-  <link rel="stylesheet" href="studyTools.css">
-  
+  <link rel="stylesheet" href="src/styles.css?v=__HASH__">
+  <link rel="stylesheet" href="src/advancedMode.css?v=__HASH__">
+  <link rel="stylesheet" href="src/studyTools.css?v=__HASH__">
+  <link rel="stylesheet" href="src/aiSandbox.css?v=__HASH__">
+
   <!-- KaTeX Math Typeface Rendering Support -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
@@ -27,7 +29,11 @@
         <p>量化金融與籌碼力學學習地圖 — 投資學力指考系統</p>
       </div>
       
+      <button id="btnHamburger" class="btn" aria-label="開啟功能選單" aria-expanded="false">☰</button>
       <div class="header-actions">
+        <button id="btnResearchNote" class="btn" style="display:none;" aria-label="查看研究筆記">
+          📋 研究筆記
+        </button>
         <button id="btnSandbox" class="btn" aria-label="打開代碼沙盒產生器">
           ⚡ FinMind 沙盒代碼
         </button>
@@ -37,8 +43,27 @@
         <button id="btnAdvanced" class="btn" style="display:none;" aria-label="進入機構研究員進階圖譜">
           🚀 進階模式
         </button>
+        <button id="btnProgressKey" class="btn" aria-label="備份或還原學習進度">
+          🔑 進度金鑰
+        </button>
       </div>
     </header>
+
+    <!-- #21: Research Notes Modal -->
+    <div id="researchNoteModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.75); overflow-y:auto;">
+      <div style="max-width:680px; margin:4rem auto; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:12px; padding:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+          <h3 style="margin:0; color:var(--text-primary);">📋 我的研究筆記</h3>
+          <button id="btnCloseNoteModal" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.4rem; line-height:1;">✕</button>
+        </div>
+        <p style="font-size:0.82rem; color:var(--text-secondary); margin:0 0 1rem; line-height:1.5;">
+          每次完成微產出時填寫的投資論點模板，會自動儲存在此。這是你從資料到交付物的練習紀錄。
+        </p>
+        <div id="researchNoteList" style="display:flex; flex-direction:column; gap:0.8rem;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
 
     <!-- Main Dashboard Grid Layout -->
     <main class="dashboard-grid">
@@ -85,6 +110,9 @@
                 <span id="scoreTextF" style="font-weight:600;">大綱解鎖中</span>
               </div>
             </div>
+
+            <!-- #22: Dual-axis progress (populated by JS) -->
+            <div id="dualAxisRow"></div>
 
             <!-- 進階科目 G：機構研究實戰（完成 A–F 後解鎖才顯示） -->
             <div id="advancedProgressRow" style="display:none; margin-top:0.7rem; padding-top:0.7rem; border-top:1px solid var(--border-color);">
@@ -207,9 +235,9 @@
 
     <!-- Footer Summary Section -->
     <footer>
-      <span>Designed with Rich HSL Aesthetics for <strong>FinMath</strong> preparation.</span>
-      <span>利用 <a href="https://github.com/FinMind/FinMind" target="_blank" rel="noopener">FinMind API</a> 進行量化實戰 | 參考 <a href="https://morrishare.com/a-comprehensive-analysis-of-skills-in-financial-services-plugins/" target="_blank" rel="noopener">Claude FS 56 Skills</a></span>
-      <span style="font-size:0.72rem; color:var(--text-muted); line-height:1.5; display:block; margin-top:0.4rem;">
+      <span class="footer-credit">Designed with Rich HSL Aesthetics for <strong>FinMath</strong> preparation.</span>
+      <span class="footer-links">利用 <a href="https://github.com/FinMind/FinMind" target="_blank" rel="noopener">FinMind API</a> 進行量化實戰 | 參考 <button id="btnSkills56" class="footer-link-btn">Anthropic FS 56 Skills</button></span>
+      <span class="footer-disclaimer">
         ⚠️ 數據與假設聲明：站內出現的無風險利率、市場風險溢酬（ERP）、稅率、籌碼係數等為<strong>教學示例值</strong>，非即時資料；實務請以最新官方來源為準（<a href="https://mops.twse.com.tw/" target="_blank" rel="noopener">公開資訊觀測站</a>、中央銀行、財政部）。內容區分「事實依據（定義／公式／規範）」與「教學建議（學習順序／估值取捨）」。
       </span>
     </footer>
@@ -257,7 +285,7 @@
             <button id="btnCopySandboxCode" class="btn" style="padding:0.4rem 0.8rem; font-size:0.75rem;">Copy Sandbox Code</button>
           </div>
           
-          <div class="code-wrapper" style="max-height: 250px; overflow-y: auto;">
+          <div class="code-wrapper sandbox-output-wrapper">
             <pre><code id="sandboxOutputCode" class="language-python"># Generating Code...</code></pre>
           </div>
         </div>
@@ -288,19 +316,196 @@
     </div>
   </div>
 
+  <!-- Progress Key Modal -->
+  <div id="progressKeyModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="progressKeyModalTitle">
+    <div class="modal-box" style="max-width:500px;">
+      <div class="modal-header">
+        <h3 id="progressKeyModalTitle" style="margin:0;">🔑 學習進度金鑰</h3>
+        <button id="btnCloseProgressKey" class="modal-close" aria-label="關閉">&times;</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:1.2rem;">
+
+        <!-- Export -->
+        <div>
+          <p style="margin:0 0 0.6rem; font-size:0.85rem; color:var(--text-secondary);">複製金鑰保存到任何地方，換裝置時可用於還原進度。</p>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <code id="pkCurrentKey" style="flex:1; background:var(--bg-tertiary,#1a1a2e); border:1px solid var(--border-color); border-radius:6px; padding:0.5rem 0.7rem; font-size:0.82rem; color:var(--accent-green,#00ff88); letter-spacing:0.05em; word-break:break-all;"></code>
+            <button id="btnCopyKey" class="btn" style="white-space:nowrap; flex-shrink:0;">複製</button>
+          </div>
+        </div>
+
+        <hr style="border:none; border-top:1px solid var(--border-color); margin:0;">
+
+        <!-- Import -->
+        <div id="pkImportSection">
+          <p style="margin:0 0 0.6rem; font-size:0.85rem; color:var(--text-secondary);">貼入金鑰以還原進度：</p>
+          <textarea id="pkInput" rows="2" placeholder="FM1-xxxxxx-xxxxxx-xxxxxx-xx" style="width:100%; box-sizing:border-box; background:var(--bg-tertiary,#1a1a2e); border:1px solid var(--border-color); border-radius:6px; padding:0.5rem 0.7rem; color:var(--text-primary); font-family:monospace; font-size:0.82rem; resize:none;"></textarea>
+          <div style="display:flex; align-items:center; gap:0.6rem; margin-top:0.5rem;">
+            <button id="btnValidateKey" class="btn btn-primary">驗證並還原</button>
+            <span id="pkError" style="color:#ff6b6b; font-size:0.8rem; display:none;"></span>
+          </div>
+        </div>
+
+        <!-- Conflict resolution (hidden until a valid key is pasted) -->
+        <div id="pkConflictSection" style="display:none; background:var(--bg-tertiary,#1a1a2e); border:1px solid var(--border-color); border-radius:8px; padding:1rem;">
+          <p id="pkDiffSummary" style="margin:0 0 0.8rem; font-size:0.85rem; color:var(--text-primary); line-height:1.6;"></p>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button id="btnPkOverwrite" class="btn btn-primary" style="font-size:0.82rem;">用金鑰覆蓋</button>
+            <button id="btnPkUnion" class="btn" style="font-size:0.82rem;">取聯集（保留最多）</button>
+            <button id="btnPkCancel" class="btn" style="font-size:0.82rem;">取消</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Skills 56 Modal -->
+  <div id="skillsModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="skillsModalTitle">
+    <div class="modal-box skills-modal-box">
+      <div class="modal-header">
+        <div>
+          <h3 id="skillsModalTitle" style="margin:0;">Anthropic Financial Services Plugins</h3>
+          <p style="margin:0.2rem 0 0; font-size:0.78rem; color:var(--text-secondary);">56 機構技能 &nbsp;·&nbsp; 7 Plugins（1 Core + 4 Add-on + 2 Partner）&nbsp;·&nbsp; 11 MCP Connectors</p>
+        </div>
+        <button id="btnCloseSkills" class="modal-close" aria-label="關閉">&times;</button>
+      </div>
+      <div class="modal-body skills-modal-body">
+
+        <!-- Core -->
+        <div class="sp-block">
+          <div class="sp-hd"><span class="sp-name">financial-analysis</span><span class="sp-badge sp-core">Core</span><span class="sp-cnt">11 skills</span></div>
+          <div class="sp-grid">
+            <div class="sk-row"><code class="sk-name">comps-analysis</code><span class="sk-desc">同業可比估值分析，自動化乘數計算與統計基準比較</span></div>
+            <div class="sk-row"><code class="sk-name">dcf-model</code><span class="sk-desc">完整折現現金流估值，含 WACC 計算與敏感度矩陣</span></div>
+            <div class="sk-row"><code class="sk-name">3-statement-model</code><span class="sk-desc">三大財務報表模板，損益表→資產負債表→現金流量表公式連動</span></div>
+            <div class="sk-row"><code class="sk-name">lbo-model</code><span class="sk-desc">槓桿收購模型，含債務排程、IRR 分析與回報敏感度</span></div>
+            <div class="sk-row"><code class="sk-name">competitive-analysis</code><span class="sk-desc">競爭格局分析，含定位矩陣、護城河評估與策略摘要</span></div>
+            <div class="sk-row"><code class="sk-name">audit-xls</code><span class="sk-desc">電子表格公式驗證，財務模型完整性與勾稽一致性檢查</span></div>
+            <div class="sk-row"><code class="sk-name">clean-data-xls</code><span class="sk-desc">資料標準化，含空白清除、格式統一、重複值去除</span></div>
+            <div class="sk-row"><code class="sk-name">deck-refresh</code><span class="sk-desc">季度簡報數據更新，市場基準重新校準與版面同步</span></div>
+            <div class="sk-row"><code class="sk-name">ib-check-deck</code><span class="sk-desc">投行簡報品質管控，數字一致性驗證與敘述對齊審查</span></div>
+            <div class="sk-row"><code class="sk-name">ppt-template-creator</code><span class="sk-desc">可重用簡報模板建立，標準化版面與主視覺框架</span></div>
+            <div class="sk-row"><code class="sk-name">skill-creator</code><span class="sk-desc">新技能開發指引，含 YAML 結構定義與測試流程</span></div>
+          </div>
+        </div>
+
+        <!-- equity-research -->
+        <div class="sp-block">
+          <div class="sp-hd"><span class="sp-name">equity-research</span><span class="sp-badge sp-addon" style="--sp-c:hsl(187,92%,45%);">Add-on</span><span class="sp-cnt">9 skills</span></div>
+          <div class="sp-grid">
+            <div class="sk-row"><code class="sk-name">earnings-analysis</code><span class="sk-desc">財報後 8–12 頁研究報告，分析 beat/miss 幅度與修訂預估方向</span></div>
+            <div class="sk-row"><code class="sk-name">earnings-preview</code><span class="sk-desc">財報前分析，含三情境建模、關鍵指標與進場佈局建議</span></div>
+            <div class="sk-row"><code class="sk-name">initiating-coverage</code><span class="sk-desc">首次覆蓋研究報告，五段式工作流（研究→建模→估值→圖表→組裝）</span></div>
+            <div class="sk-row"><code class="sk-name">catalyst-calendar</code><span class="sk-desc">催化劑事件追蹤，含財報日、股東會、法規審查與產品里程碑</span></div>
+            <div class="sk-row"><code class="sk-name">model-update</code><span class="sk-desc">財務模型季報後更新，整合新數據與管理層最新指引</span></div>
+            <div class="sk-row"><code class="sk-name">morning-note</code><span class="sk-desc">每日晨會市場摘要，整合隔夜消息與覆蓋股票當日交易想法</span></div>
+            <div class="sk-row"><code class="sk-name">sector-overview</code><span class="sk-desc">產業分析總覽，含供需動態、競爭格局與主題趨勢</span></div>
+            <div class="sk-row"><code class="sk-name">idea-generation</code><span class="sk-desc">系統化量化選股篩選，從多因子條件發掘多空投資標的</span></div>
+            <div class="sk-row"><code class="sk-name">thesis-tracker</code><span class="sk-desc">投資假說持續監控，含 KPI 追蹤、催化劑里程碑與更新紀錄</span></div>
+          </div>
+        </div>
+
+        <!-- investment-banking -->
+        <div class="sp-block">
+          <div class="sp-hd"><span class="sp-name">investment-banking</span><span class="sp-badge sp-addon" style="--sp-c:hsl(263,90%,65%);">Add-on</span><span class="sp-cnt">9 skills</span></div>
+          <div class="sp-grid">
+            <div class="sk-row"><code class="sk-name">cim-builder</code><span class="sk-desc">機密資訊備忘錄起草，供 M&amp;A 流程中向潛在投資人分發</span></div>
+            <div class="sk-row"><code class="sk-name">buyer-list</code><span class="sk-desc">M&amp;A 潛在買方識別，依策略契合度與財務能力排名</span></div>
+            <div class="sk-row"><code class="sk-name">merger-model</code><span class="sk-desc">合併增厚/稀釋分析，含協同效應敏感度與購買價格分配</span></div>
+            <div class="sk-row"><code class="sk-name">strip-profile</code><span class="sk-desc">單頁四象限公司概覽，含業務描述、財務摘要與估值</span></div>
+            <div class="sk-row"><code class="sk-name">pitch-deck</code><span class="sk-desc">投行簡報模板，從原始財務與市場數據自動填充各頁</span></div>
+            <div class="sk-row"><code class="sk-name">datapack-builder</code><span class="sk-desc">標準化數據包建立，整合財務、交易與市場來源</span></div>
+            <div class="sk-row"><code class="sk-name">deal-tracker</code><span class="sk-desc">M&amp;A 交易里程碑與管線管理，含狀態更新與時程追蹤</span></div>
+            <div class="sk-row"><code class="sk-name">process-letter</code><span class="sk-desc">正式 M&amp;A 銷售流程文件，含競標方指示與時程安排</span></div>
+            <div class="sk-row"><code class="sk-name">teaser</code><span class="sk-desc">匿名單頁公司介紹，用於 NDA 前的初步洽談階段</span></div>
+          </div>
+        </div>
+
+        <!-- private-equity -->
+        <div class="sp-block">
+          <div class="sp-hd"><span class="sp-name">private-equity</span><span class="sp-badge sp-addon" style="--sp-c:hsl(24,95%,55%);">Add-on</span><span class="sp-cnt">10 skills</span></div>
+          <div class="sp-grid">
+            <div class="sk-row"><code class="sk-name">deal-sourcing</code><span class="sk-desc">目標公司識別與創始人外聯信件生成，含初步財務篩選</span></div>
+            <div class="sk-row"><code class="sk-name">deal-screening</code><span class="sk-desc">從 CIM/Teaser 文件快速評估投資標準，生成篩選備忘錄</span></div>
+            <div class="sk-row"><code class="sk-name">dd-checklist</code><span class="sk-desc">可自訂盡職調查清單，含進度追蹤、紅旗標記與負責人分配</span></div>
+            <div class="sk-row"><code class="sk-name">dd-meeting-prep</code><span class="sk-desc">管理層簡報與專家訪談準備，含基準比較與問題清單</span></div>
+            <div class="sk-row"><code class="sk-name">ic-memo</code><span class="sk-desc">投資委員會備忘錄，整合盡調結果、財務模型與交易條款</span></div>
+            <div class="sk-row"><code class="sk-name">returns-analysis</code><span class="sk-desc">IRR/MOIC 敏感度表，涵蓋槓桿、進入倍數、退出與成長情境</span></div>
+            <div class="sk-row"><code class="sk-name">unit-economics</code><span class="sk-desc">SaaS/訂閱制單位經濟，含 ARR 隊列、LTV/CAC、淨留存率</span></div>
+            <div class="sk-row"><code class="sk-name">value-creation-plan</code><span class="sk-desc">收購後價值創造策略，含 100 天計畫、KPI 框架與執行路線圖</span></div>
+            <div class="sk-row"><code class="sk-name">portfolio-monitoring</code><span class="sk-desc">投組公司績效追蹤，從月/季報告自動提取關鍵 KPI</span></div>
+            <div class="sk-row"><code class="sk-name">ai-readiness</code><span class="sk-desc">投組公司 AI 採用機會評估，識別自動化與效率提升切入點</span></div>
+          </div>
+        </div>
+
+        <!-- wealth-management -->
+        <div class="sp-block">
+          <div class="sp-hd"><span class="sp-name">wealth-management</span><span class="sp-badge sp-addon" style="--sp-c:hsl(340,82%,52%);">Add-on</span><span class="sp-cnt">6 skills</span></div>
+          <div class="sp-grid">
+            <div class="sk-row"><code class="sk-name">client-review</code><span class="sk-desc">客戶季度會議準備，含投組績效回顧與資產配置分析</span></div>
+            <div class="sk-row"><code class="sk-name">financial-plan</code><span class="sk-desc">全面個人財務規劃，含退休、教育、遺產規劃與現金流分析</span></div>
+            <div class="sk-row"><code class="sk-name">portfolio-rebalance</code><span class="sk-desc">資產配置漂移分析，含稅務感知再平衡建議與執行清單</span></div>
+            <div class="sk-row"><code class="sk-name">tax-loss-harvesting</code><span class="sk-desc">未實現虧損識別，含替代證券建議與洗售規定追蹤</span></div>
+            <div class="sk-row"><code class="sk-name">client-report</code><span class="sk-desc">季度/年度客戶績效報告，含報酬歸因、配置明細與市場評論</span></div>
+            <div class="sk-row"><code class="sk-name">investment-proposal</code><span class="sk-desc">投資方案簡報，含策略說明、費用結構與客戶開發文件</span></div>
+          </div>
+        </div>
+
+        <!-- LSEG -->
+        <div class="sp-block">
+          <div class="sp-hd"><span class="sp-name">LSEG</span><span class="sp-badge sp-partner" style="--sp-c:hsl(48,96%,60%);">Partner</span><span class="sp-cnt">8 skills</span></div>
+          <div class="sp-grid">
+            <div class="sk-row"><code class="sk-name">bond-relative-value</code><span class="sk-desc">固定收益定價與相對價值分析，含殖利率曲線與利差比較</span></div>
+            <div class="sk-row"><code class="sk-name">bond-futures-basis</code><span class="sk-desc">期貨定價與最便宜可交割券（CTD）識別，含隱含回購率計算</span></div>
+            <div class="sk-row"><code class="sk-name">fixed-income-portfolio</code><span class="sk-desc">多債券定價與現金流分析，含情境壓力測試</span></div>
+            <div class="sk-row"><code class="sk-name">fx-carry-trade</code><span class="sk-desc">外匯即期/遠期利率評估，含利率差異與 carry 機會分析</span></div>
+            <div class="sk-row"><code class="sk-name">swap-curve-strategy</code><span class="sk-desc">利率交換曲線定價，陡峭化/平坦化交易識別與執行建議</span></div>
+            <div class="sk-row"><code class="sk-name">macro-rates-monitor</code><span class="sk-desc">整合總體經濟與利率儀表板，監控央行政策與市場定價偏離</span></div>
+            <div class="sk-row"><code class="sk-name">option-vol-analysis</code><span class="sk-desc">波動率曲面分析，隱含 vs 實現比較，含 Delta/Gamma/Vega</span></div>
+            <div class="sk-row"><code class="sk-name">equity-research</code><span class="sk-desc">股票研究快照，整合共識預估、基本面指標與技術面摘要</span></div>
+          </div>
+        </div>
+
+        <!-- S&P Global -->
+        <div class="sp-block">
+          <div class="sp-hd"><span class="sp-name">S&amp;P Global</span><span class="sp-badge sp-partner" style="--sp-c:hsl(220,90%,60%);">Partner</span><span class="sp-cnt">3 skills</span></div>
+          <div class="sp-grid">
+            <div class="sk-row"><code class="sk-name">tear-sheet</code><span class="sk-desc">專業單頁公司摘要，使用 S&amp;P Capital IQ 數據自動生成</span></div>
+            <div class="sk-row"><code class="sk-name">earnings-preview-beta</code><span class="sk-desc">4–5 頁 HTML 財報前瞻，整合法說會逐字稿與競爭對手背景</span></div>
+            <div class="sk-row"><code class="sk-name">funding-digest</code><span class="sk-desc">單頁 PPT 融資摘要，依產業/公司焦點篩選最新融資活動</span></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer" style="font-size:0.75rem; color:var(--text-secondary); text-align:center;">
+        以上為 Anthropic Financial Services Plugins 的 56 個機構技能，本平台課程內容以此為設計錨點
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
-  <script src="syllabusData.js"></script>
-  <script src="advancedData.js"></script>
-  <script src="app.js"></script>
+  <script src="src/syllabusData.js?v=__HASH__"></script>
+  <script src="src/advancedData.js?v=__HASH__"></script>
+  <script src="src/answerVerifier.js?v=__HASH__"></script>
+  <script src="src/storage.js?v=__HASH__"></script>
+  <script src="src/masteryStore.js?v=__HASH__"></script>
+  <script src="src/progressKey.js?v=__HASH__"></script>
+  <script src="src/curriculumQuery.js?v=__HASH__"></script>
+  <script src="src/pythonHighlight.js?v=__HASH__"></script>
+  <script src="src/app.js?v=__HASH__"></script>
 
   <!-- 進階圖譜（機構研究員養成）：完成 A–F 後解鎖。刪除以下兩行即可完全移除此功能。 -->
-  <script src="advancedMode.js"></script>
+  <script src="src/advancedMode.js?v=__HASH__"></script>
 
   <!-- 學習工具（錯題本 + 起點診斷）：plug-and-play，刪除此行即可移除。 -->
-  <script src="studyTools.js"></script>
-  
+  <script src="src/studyTools.js?v=__HASH__"></script>
+
   <!-- AI Analyst Sandbox Plugin (Experimental & Plug-and-Play) -->
   <!-- Delete the line below to fully uninstall this feature and restore original product integrity -->
-  <script src="aiSandbox.js"></script>
+  <script src="src/aiSandbox.js?v=__HASH__"></script>
+
+  <!-- Onboarding Tour (Issue #8): first-visit 3-step spotlight. Delete to remove. -->
+  <script src="src/onboarding.js?v=__HASH__"></script>
 </body>
 </html>
