@@ -30,7 +30,6 @@ window.lockScroll = function () {
     document.body.dataset.scrollY = top;
     document.body.style.top = `-${top}px`;
     document.body.style.position = 'fixed';
-    document.body.style.overflow = 'hidden';
     document.body.style.width = '100%';
     // iOS Safari: position:fixed may cause the toolbar to reappear, shrinking
     // visualViewport.height. rAF catches the first settled frame (~16ms); the
@@ -45,7 +44,6 @@ window.unlockScroll = function () {
   if (_scrollLockCount === 0 && document.body.style.position === 'fixed') {
     const top = Math.abs(parseInt(document.body.dataset.scrollY || '0', 10));
     document.body.style.position = '';
-    document.body.style.overflow = '';
     document.body.style.top = '';
     document.body.style.width = '';
     delete document.body.dataset.scrollY;
