@@ -264,6 +264,156 @@ const advancedSyllabus = {
         "用 60 秒口頭 pitch 你的結論並接受一輪提問（可對著錄音設備錄下 60 秒說明，回放後自評：論點是否清楚、數字是否說出口）",
         "根據回饋修訂成品至少一次（基於 AI QC 或自我錄音回饋，至少修改一個數字或一句結論措辭）"
       ]
+    },
+    {
+      id: "g11",
+      num: "G11",
+      title: "供應鏈定位分析",
+      icon: "🔗",
+      x: 150, y: 830,
+      gap: "現有 B3 只把產業當數學基底變換，但研究員最基本的問題是：這家公司在供應鏈哪個位置？有沒有訂價力？課程完全未觸及 competitive-analysis 技能，也未教上下游議價結構與拉貨/砍單訊號的傳導邏輯。",
+      skill: {
+        name: "competitive-analysis / sector-overview",
+        plugin: "Core / equity-research Add-on",
+        desc: "分析競爭格局、定位供應鏈層級、識別議價能力與需求傳導方向。"
+      },
+      objectives: [
+        "把目標公司定位在「上游材料 / 中游製造 / 下游品牌」，並說明議價力的幾何方向。",
+        "用月營收 YoY 動能差異，辨識下游拉貨訊號向上游遞延的時間差。",
+        "輸出一份『供應鏈定位卡』：位置 + 議價力評分(1–5) + 近期拉/砍貨訊號。"
+      ],
+      finmindCode: "import pandas as pd\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n\n# AI server supply chain: 廣達(2382, downstream) → 台積電(2330, midstream) → 日月光(3711, upstream)\nchain = [\n    {'stock_id': '2382', 'layer': '下游（品牌/整機）', 'company': '廣達'},\n    {'stock_id': '2330', 'layer': '中游（製造/晶圓代工）', 'company': '台積電'},\n    {'stock_id': '3711', 'layer': '上游（封測）', 'company': '日月光'},\n]\n\nresults = []\nfor item in chain:\n    rev = dl.taiwan_stock_month_revenue(stock_id=item['stock_id'], start_date='2022-01-01')\n    rev = rev.sort_values('date').copy()\n    rev['yoy'] = rev['revenue'].pct_change(12) * 100\n    latest = rev.dropna(subset=['yoy']).tail(3).copy()\n    latest['stock_id'] = item['stock_id']\n    latest['company'] = item['company']\n    latest['layer'] = item['layer']\n    results.append(latest[['stock_id', 'company', 'layer', 'date', 'revenue', 'yoy']])\n\ndf = pd.concat(results).reset_index(drop=True)\nprint('=== 供應鏈各層月營收 YoY ===' )\nprint(df.to_string(index=False))\n\n# 傳導時差分析：取每家最新 YoY，比較下游 vs 上游的動能差\npivot = df.groupby('company').apply(lambda x: x.dropna().tail(1)['yoy'].values[0]).reset_index()\npivot.columns = ['company', 'latest_yoy']\nlayers = pd.DataFrame(chain)[['stock_id', 'company', 'layer']]\nsummary = pivot.merge(layers, on='company')\nprint('\\n=== 供應鏈定位卡 ===')\nprint(summary[['company', 'layer', 'latest_yoy']].to_string(index=False))\nprint('\\n傳導時差分析：下游拉貨訊號通常領先上游 1–3 個月。')\nprint('議價力評分參考（請人工填入）：下游品牌=2, 中游製造=4, 上游材料=3')\nprint('當前週期判斷（請人工填入）：拉貨/砍單訊號 → 觀察下游 YoY 是否加速')",
+      checklist: [
+        "把目標公司定位在供應鏈的哪一層（上游/中游/下游），並說明判斷依據",
+        "計算至少兩層廠商的月營收 YoY，觀察需求訊號的傳導時差",
+        "為目標公司打出議價力評分（1=完全無定價權，5=絕對定價權）並附理由",
+        "輸出一份『供應鏈定位卡』並說明當前是拉貨還是砍單週期"
+      ]
+    },
+    {
+      id: "g12",
+      num: "G12",
+      title: "盈餘預估模型與共識比對",
+      icon: "📊",
+      x: 420, y: 830,
+      gap: "D2/F2 只教學習者計算『beat 的貝氏機率』，但從未真正建一張 EPS 預估表。賣方研究員每季最核心的工作是：根據月營收和歷史毛利率，算出自己的 EPS 預估，再與市場共識比對，決定多/空方向。少了這個環節，貝氏機率計算就只是空中樓閣。",
+      skill: {
+        name: "earnings-preview / model-update",
+        plugin: "equity-research Add-on",
+        desc: "用歷史財報參數建下季 EPS 預估，與市場共識比對，給出 beat/miss 方向與幅度。"
+      },
+      objectives: [
+        "用月營收 + 歷史毛利率，建一張『下季 EPS 預估表』（三情境：樂觀/基準/悲觀）。",
+        "把自己的 EPS 預估與市場共識比對，算出驚喜幅度（Surprise %）。",
+        "把本模組的 EPS 驚喜值作為 D2 貝氏模型的量化似然度輸入，完成兩個模組的整合。"
+      ],
+      finmindCode: "import pandas as pd\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n\n# 步驟 1：取台積電(2330)近 8 季財報，計算歷史毛利率\nfin = dl.taiwan_stock_financial_statement(stock_id='2330', start_date='2022-01-01')\npiv = fin.pivot_table(index='date', columns='type', values='value', aggfunc='first')\nrev_col = piv.get('Revenue', pd.Series(dtype=float))\ngp_col  = piv.get('GrossProfit', pd.Series(dtype=float))\nmargin_series = (gp_col / rev_col).dropna().tail(8)\navg_gm = margin_series.mean()\nprint(f'歷史平均毛利率（近 8 季）：{avg_gm:.2%}')\n\n# 步驟 2：用近 3 個月月營收外推下季營收\nrev_m = dl.taiwan_stock_month_revenue(stock_id='2330', start_date='2024-01-01').sort_values('date')\nlast3 = rev_m.tail(3)['revenue'].sum()  # 近 3 月加總估算單季\nbase_rev = last3\nprint(f'近 3 月營收加總（估算下季）：{base_rev:,.0f} 千元')\n\n# 步驟 3：三情境 EPS 估算\nshares_thousands = 25930000  # 台積電股本約 259.3 億股（以千股為單位）\ntax_rate = 0.20\nscenarios = {\n    '樂觀 (+10%)': base_rev * 1.10,\n    '基準': base_rev,\n    '悲觀 (-10%)': base_rev * 0.90\n}\nrows = []\nfor name, rev in scenarios.items():\n    gross_profit = rev * avg_gm\n    # 簡化：EBIT ≈ GrossProfit * 0.85（扣除 R&D/SGA 約估）\n    ebit = gross_profit * 0.85\n    net_income = ebit * (1 - tax_rate)\n    eps = net_income / shares_thousands  # 單位：元/股\n    rows.append({'情境': name, '營收(千元)': f'{rev:,.0f}',\n                 '毛利率': f'{avg_gm:.2%}', '淨利(千元)': f'{net_income:,.0f}',\n                 'EPS(元)': f'{eps:.2f}'})\ndf = pd.DataFrame(rows)\nprint('\\n=== 下季 EPS 三情境預估表 ===')\nprint(df.to_string(index=False))\nprint('\\n市場共識 EPS 請至 CMONEY/TEJ 查詢，輸入後可計算 Surprise % = (你的預估 - 共識) / |共識| × 100%')",
+      checklist: [
+        "完成三情境 EPS 預估表（樂觀/基準/悲觀），每個情境列出：營收、毛利率、淨利、EPS",
+        "查詢市場共識 EPS（CMONEY 或 TEJ），計算你的基準預估與共識的 Surprise %",
+        "根據 Surprise % 給出 beat/miss 方向，並說明最大的不確定因素是什麼",
+        "把本模組的 Surprise % 帶入 D2 章節的貝氏公式，算出更新後的後驗超預期機率"
+      ]
+    },
+    {
+      id: "g13",
+      num: "G13",
+      title: "財報品質與地雷偵測",
+      icon: "🚨",
+      x: 150, y: 980,
+      gap: "A 科目教三表勾稽的『正向驗算』，G2 的 audit-xls 只做公式一致性。但台股散戶最需要的是『逆向防雷』——識別財報粉飾與盈餘品質惡化的早期訊號。沒有地雷偵測技能，再好的估值模型也可能踩在假數字上。",
+      skill: {
+        name: "audit-xls（鑑識延伸）",
+        plugin: "Core",
+        desc: "從『公式正確性審計』延伸至『財報地雷鑑識』：三張紅旗檢查表自動化偵測盈餘品質問題。"
+      },
+      objectives: [
+        "跑『現金流背離』紅旗：NetIncome > 0 但 OperatingCashFlow < 0 連續兩季。",
+        "跑『應收/存貨膨脹』紅旗：應收帳款成長率 > 營收成長率超過 20ppt，或存貨/營收比持續上升。",
+        "跑『業外損益依賴』紅旗：業外損益佔稅前淨利 > 30% 連續兩季。"
+      ],
+      finmindCode: "import pandas as pd\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n\n# 財報資料\nfin = dl.taiwan_stock_financial_statement(stock_id='2330', start_date='2022-01-01')\npiv = fin.pivot_table(index='date', columns='type', values='value', aggfunc='first').sort_index()\n\n# 現金流資料\ncf = dl.taiwan_stock_cash_flows_statement(stock_id='2330', start_date='2022-01-01')\ncf_piv = cf.pivot_table(index='date', columns='type', values='value', aggfunc='first').sort_index()\n\nni  = piv.get('NetIncome', pd.Series(dtype=float))\nrev = piv.get('Revenue', pd.Series(dtype=float))\ngp  = piv.get('GrossProfit', pd.Series(dtype=float))\nnonop = piv.get('NonOperatingIncomeExpense', pd.Series(dtype=float))\nocf = cf_piv.get('OperatingCashFlow', pd.Series(dtype=float))\n\nprint('=== 財報品質紅旗偵測報告 (2330 台積電) ===')\n\n# --- 紅旗 1：現金流背離 ---\nprint('\\n[紅旗 1] 現金流背離（NI > 0 但 OCF < 0）')\nif ni is not None and ocf is not None:\n    common_idx = ni.index.intersection(ocf.index)\n    flag1 = pd.DataFrame({'NI': ni[common_idx], 'OCF': ocf[common_idx]})\n    flag1['diverge'] = (flag1['NI'] > 0) & (flag1['OCF'] < 0)\n    consec = flag1['diverge'].rolling(2).sum()\n    if consec.max() >= 2:\n        print('  🚩 紅旗：發現連續 2 季以上 NI>0 且 OCF<0')\n    elif flag1['diverge'].any():\n        print('  ⚠️  警示：曾出現單季 NI>0 且 OCF<0，尚未連續 2 季')\n    else:\n        print('  ✅ 通過：無現金流背離訊號')\n    print(flag1[['NI', 'OCF', 'diverge']].tail(6).to_string())\nelse:\n    print('  ⚠️  資料不足：FinMind 免費版可能缺少 OperatingCashFlow，請補充 TEJ/MOPS')\n\n# --- 紅旗 2：應收/存貨膨脹 ---\nprint('\\n[紅旗 2] 應收帳款/存貨膨脹')\nrev_yoy = rev.pct_change(4) if len(rev) >= 5 else None\nif rev_yoy is not None:\n    if (rev_yoy.tail(4) > 0).any():\n        print('  ✅ 營收有成長，應收帳款詳細資料需從資產負債表取得（BalanceSheet → AccountsReceivable）')\n    print('  ⚠️  提醒：FinMind 應收帳款欄位請查 taiwan_stock_balance_sheet，欄位名稱為 AccountsReceivable')\nelse:\n    print('  ⚠️  資料不足：Revenue 資料太少')\n\n# --- 紅旗 3：業外損益依賴 ---\nprint('\\n[紅旗 3] 業外損益依賴（業外/稅前淨利 > 30%）')\nif nonop is not None and ni is not None:\n    pretax_approx = ni / (1 - 0.20)  # 簡化：假設稅率 20%\n    ratio = (nonop.abs() / pretax_approx.abs()).dropna().tail(6)\n    flagged = ratio[ratio > 0.30]\n    if len(flagged) >= 2:\n        print(f'  🚩 紅旗：連續 {len(flagged)} 季業外損益佔稅前淨利超過 30%')\n    elif len(flagged) == 1:\n        print('  ⚠️  警示：單季業外損益偏高，持續觀察')\n    else:\n        print('  ✅ 通過：業外損益佔比在合理範圍')\n    print(ratio.rename('NonOp/PreTax').to_string())\nelse:\n    print('  ⚠️  NonOperatingIncomeExpense 欄位不存在，請於 TEJ/MOPS 取得業外損益明細')",
+      checklist: [
+        "對目標股跑完三張紅旗檢查表，記錄每項結果（通過/警示/紅旗）",
+        "對有紅旗的項目，查閱該公司的財報附註或重大訊息，確認是否有合理解釋",
+        "對比同業（至少一家）的相同紅旗指標，判斷是產業特性還是個股異常",
+        "根據三張紅旗結果，寫出一句『財報品質評估結論』，說明是否影響你的持股意願"
+      ]
+    },
+    {
+      id: "g14",
+      num: "G14",
+      title: "目標價框架：河流圖 + SOTP + 三法交叉",
+      icon: "🎯",
+      x: 420, y: 980,
+      gap: "G4 只做單一 DCF，但台股賣方研究員在 initiating coverage 報告裡，目標價永遠是『三法交叉驗證』後給出的：DCF 絕對估值 + 歷史 P/E Band（河流圖）+ 分部加總（SOTP）。只會 DCF 而不會畫河流圖、不會做 SOTP，無法產出機構級目標價。",
+      skill: {
+        name: "dcf-model / comps-analysis / initiating-coverage",
+        plugin: "Core / equity-research Add-on",
+        desc: "歷史估值帶定位當前位置、DCF 算絕對現值、SOTP 分部加總，三法收斂為目標價區間。"
+      },
+      objectives: [
+        "畫出目標股 3–5 年歷史 P/E Band（河流圖），標出當前估值在歷史分位。",
+        "對接 G4 的 DCF 計算，從企業價值(EV)推導至每股目標價（EV - 淨負債 ÷ 股數）。",
+        "輸出『目標價收斂摘要』：三法各自區間 + 基準目標價 + 上行/下行情境。"
+      ],
+      finmindCode: "import pandas as pd\nimport numpy as np\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n\n# 步驟 1：取台積電歷史 P/E Band（河流圖）\nper_df = dl.taiwan_stock_per_pbr(stock_id='2330', start_date='2020-01-01')\nper_series = per_df['PER'].dropna().replace(0, np.nan).dropna()\nmean_per = per_series.mean()\nstd_per  = per_series.std()\nbands = {\n    '+2σ': mean_per + 2 * std_per,\n    '+1σ': mean_per + 1 * std_per,\n    '均值': mean_per,\n    '-1σ': mean_per - 1 * std_per,\n    '-2σ': mean_per - 2 * std_per,\n}\nprint('=== 歷史 P/E Band（河流圖） ===')\nfor name, val in bands.items():\n    print(f'  {name}: {val:.1f}x')\n\n# 步驟 2：取最新 EPS 估算\nfin = dl.taiwan_stock_financial_statement(stock_id='2330', start_date='2023-01-01')\npiv = fin.pivot_table(index='date', columns='type', values='value', aggfunc='first').sort_index()\nni = piv.get('NetIncome', pd.Series(dtype=float)).dropna()\nshares_k = 25930000  # 千股\neps_latest = (ni.tail(4).sum() / shares_k) if len(ni) >= 4 else None  # trailing 12m EPS\nprint(f'\\n近四季累計 EPS（TTM）估算：{eps_latest:.2f} 元' if eps_latest else '\\nEPS 資料不足')\n\n# 步驟 3：P/E Band → 目標價對應\nif eps_latest:\n    print('\\n=== P/E Band 目標價對應 ===')\n    for name, per in bands.items():\n        price = per * eps_latest\n        print(f'  {name} ({per:.1f}x): 目標價 = {price:.0f} 元')\n\n# 步驟 4：當前市價 vs 歷史 P/E 分位\ndaily = dl.taiwan_stock_daily(stock_id='2330', start_date='2025-01-01')\ncurrent_price = daily['close'].dropna().iloc[-1]\ncurrent_per = current_price / (eps_latest if eps_latest else 40)\npct_rank = (per_series < current_per).mean() * 100\nprint(f'\\n當前股價：{current_price:.0f}｜當前 P/E：{current_per:.1f}x｜歷史分位：第 {pct_rank:.0f} 百分位')\n\n# 步驟 5：DCF 簡化估值（接 G4）\nwacc, g, fcf_bn = 0.084, 0.03, 2400  # 億元 TWD\nev = fcf_bn / (wacc - g)  # Gordon model 簡化\nnet_debt_bn = 500\nequity_bn = ev - net_debt_bn\nshares_bn = 25.93\ndcf_price = (equity_bn / shares_bn) * 100  # 換算為每股（億元/億股×100）\nprint(f'\\nDCF 簡化目標價：{dcf_price:.0f} 元（WACC={wacc:.1%}, g={g:.1%}）')\n\n# 步驟 6：目標價收斂摘要\npe_mid = bands['均值'] * (eps_latest if eps_latest else 40)\nbase_target = (pe_mid + dcf_price) / 2\nprint(f'\\n=== 目標價收斂摘要 ===')\nprint(f'  P/E Band 中值目標價：{pe_mid:.0f} 元')\nprint(f'  DCF 目標價：{dcf_price:.0f} 元')\nprint(f'  基準目標價（兩法平均）：{base_target:.0f} 元')\nprint(f'  上行情境（+1σ P/E）：{bands[\"+1σ\"] * (eps_latest if eps_latest else 40):.0f} 元')\nprint(f'  下行情境（-1σ P/E）：{bands[\"-1σ\"] * (eps_latest if eps_latest else 40):.0f} 元')",
+      checklist: [
+        "畫出目標股的歷史 P/E Band（至少 3 年），標出當前 P/E 在歷史的分位數（第幾 %）",
+        "用 G4 的 DCF 模型算出每股目標價（EV - 淨負債 ÷ 股數）",
+        "若目標公司有多個業務線（如聯發科），嘗試分部加總(SOTP)：各部門分別估值後加總",
+        "輸出目標價收斂摘要：三法各自給出的價格區間 + 你的基準目標價 + 說明為何選此收斂點"
+      ]
+    },
+    {
+      id: "g15",
+      num: "G15",
+      title: "總經/利率/匯率傳導框架",
+      icon: "🌐",
+      x: 150, y: 1130,
+      gap: "科目 E 是純粹的組合數學(CAPM/Sharpe/VaR)，完全沒有『總體環境怎麼影響個股估值』的框架。台股出口科技股的估值高度受美債殖利率（影響 WACC 折現率）和台幣匯率（影響毛利）驅動。忽略總經框架，DCF 和 CAPM 的輸入假設就沒有錨點。",
+      skill: {
+        name: "macro-rates-monitor / fx-carry-trade（概念移植）",
+        plugin: "LSEG Partner（概念層）",
+        desc: "量化利率→WACC→估值、匯率→毛利→EPS 兩條傳導鏈，建立總經參數敏感度表。"
+      },
+      objectives: [
+        "計算美債殖利率上升 100bps 對 WACC 的影響，再用 B2 敏感度矩陣算出 DCF 估值的跌幅。",
+        "用台幣匯率歷史資料，估算匯率升值 1% 對出口商毛利率的影響係數。",
+        "輸出『總經參數敏感度表』：美債+100bps / 台幣升5% / 雙重衝擊三情境的 EPS 與目標價變動。"
+      ],
+      finmindCode: "import pandas as pd\nimport numpy as np\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n\n# 步驟 1：取台積電歷史毛利率（每季）\nfin = dl.taiwan_stock_financial_statement(stock_id='2330', start_date='2021-01-01')\npiv = fin.pivot_table(index='date', columns='type', values='value', aggfunc='first').sort_index()\nrev = piv.get('Revenue', pd.Series(dtype=float)).dropna()\ngp  = piv.get('GrossProfit', pd.Series(dtype=float)).dropna()\ngm  = (gp / rev).dropna().tail(8)\nprint('=== 台積電歷史毛利率（近 8 季） ===')\nprint(gm.rename('GrossMargin').apply(lambda x: f'{x:.2%}').to_string())\n\n# 步驟 2：匯率敏感度（概念示範）\n# FinMind 匯率資料：dl.exchange_rate(currency='USD', start_date='2021-01-01')\n# 若 API 不可用，請改用 FRED (fred.stlouisfed.org) 或 TEJ 取得 USD/TWD 月均價\n# 此處以說明代替：台積電約 70% 營收以美元計價，台幣升值 1% → 美元收入換算減少 0.7%\nusd_revenue_ratio = 0.70\nfx_sensitivity_per_pct = -usd_revenue_ratio  # 台幣升 1% → 營收影響約 -0.70%\nprint(f'\\n匯率敏感度係數：台幣升值 1% → 整體營收約 {fx_sensitivity_per_pct:.2%}')\nprint('（假設：約 70% 營收以美元計價；毛利影響係數取決於美元成本占比）')\n\n# 步驟 3：利率敏感度（WACC 傳導至 DCF）\nwacc_base = 0.084\ng = 0.03\nfcf = 2400  # 億元估算\neq_weight = 0.90  # 台積電近全權益結構\n\ndef gordon_dcf(wacc, g, fcf):\n    return fcf / (wacc - g) if wacc > g else float('inf')\n\nev_base = gordon_dcf(wacc_base, g, fcf)\nwacc_shock = wacc_base + 0.01  # +100 bps\nev_shock = gordon_dcf(wacc_shock, g, fcf)\nev_change_pct = (ev_shock - ev_base) / ev_base * 100\nprint(f'\\n利率敏感度：WACC {wacc_base:.2%} → {wacc_shock:.2%} (+100bps)')\nprint(f'  EV 變動：{ev_base:,.0f} → {ev_shock:,.0f} 億元（{ev_change_pct:.1f}%）')\n\n# 步驟 4：三情境敏感度表\nbase_eps = 40.0  # 元/股（假設基準 EPS）\nscenarios = [\n    ('基準', 0, 0),\n    ('美債 +100bps', 0.01, 0),\n    ('台幣升值 5%', 0, 0.05),\n    ('雙重衝擊', 0.01, 0.05),\n]\nrows = []\nfor name, rate_shock, fx_shock in scenarios:\n    eps_impact = base_eps * (1 + fx_sensitivity_per_pct * fx_shock)\n    wacc_new = wacc_base + rate_shock * eq_weight\n    ev_new = gordon_dcf(wacc_new, g, fcf)\n    tp_change_pct = (ev_new - ev_base) / ev_base * 100\n    rows.append({'情境': name, '調後EPS(元)': f'{eps_impact:.1f}',\n                 'WACC': f'{wacc_new:.2%}', '目標價變動%': f'{tp_change_pct:.1f}%'})\ndf = pd.DataFrame(rows)\nprint('\\n=== 總經參數敏感度表 ===')\nprint(df.to_string(index=False))",
+      checklist: [
+        "計算美債殖利率上升 100bps 對目標股 WACC 的影響（用 E1 的 CAPM 公式 + B2 的 DCF 敏感度）",
+        "用歷史台幣匯率與毛利率資料，估算匯率升值 1% 對毛利率的影響係數（可用迴歸或簡單比例）",
+        "建立三情境敏感度表：① 美債+100bps ② 台幣升5% ③ 兩者同時發生，計算每情境的 EPS 與目標價變動",
+        "根據結果，說明目前利率/匯率環境是否對估值構成風險，以及這如何影響你的持倉決策"
+      ]
+    },
+    {
+      id: "g16",
+      num: "G16",
+      title: "因子回測與訊號驗證",
+      icon: "🔬",
+      x: 420, y: 1130,
+      gap: "A–F 課程斷言了許多訊號（『千張大戶比上升→利多』、『月營收 YoY 動能→預測未來報酬』），但從未實證驗證這些訊號在台股歷史上是否真的有效。不驗證的投資訊號只是直覺包裝成數學。這是整個平台最重要的『自我懷疑機制』。",
+      skill: {
+        name: "idea-generation（回測引擎）",
+        plugin: "equity-research Add-on",
+        desc: "選一個課程中學過的訊號，用 FinMind 歷史資料做單因子回測，輸出勝率、平均報酬、α，自己判斷訊號是否值得相信。"
+      },
+      objectives: [
+        "選定一個課程訊號（範例：月營收連續3個月 YoY 加速 → 持有60天），定義明確的觸發條件。",
+        "用 FinMind 跑回測：計算所有歷史觸發日後的持有報酬，統計勝率與均值。",
+        "與大盤基準(0050)比較，計算超額報酬 α，判斷訊號有效/無效/條件有效。"
+      ],
+      finmindCode: "import pandas as pd\nimport numpy as np\nfrom FinMind.data import DataLoader\n\ndl = DataLoader()\n\n# ====== 訊號定義：月營收 YoY 連續 3 個月加速（YoY 環比差 > 0） ======\n# 無未來函數：訊號日為月營收公告日（次月 10 日前），持有期從公告日後第一個交易日起算\n\n# 步驟 1：取月營收，計算 YoY 與 YoY 加速度\nrev = dl.taiwan_stock_month_revenue(stock_id='2330', start_date='2018-01-01').sort_values('date')\nrev['yoy'] = rev['revenue'].pct_change(12) * 100\nrev['yoy_accel'] = rev['yoy'].diff()  # month-over-month change in YoY\nrev = rev.dropna(subset=['yoy', 'yoy_accel']).reset_index(drop=True)\n\n# 步驟 2：定義訊號觸發：連續 3 個月 yoy_accel > 0\nrev['signal'] = False\nfor i in range(2, len(rev)):\n    if (rev.loc[i, 'yoy_accel'] > 0 and\n        rev.loc[i-1, 'yoy_accel'] > 0 and\n        rev.loc[i-2, 'yoy_accel'] > 0):\n        rev.loc[i, 'signal'] = True\n\nsignal_dates = rev[rev['signal']]['date'].tolist()\nprint(f'觸發日數量：{len(signal_dates)} 次')\nprint('觸發日（前 5 筆）：', signal_dates[:5])\n\n# 步驟 3：取股價資料（2330 + 0050 大盤基準）\nprice_2330 = dl.taiwan_stock_daily(stock_id='2330', start_date='2018-01-01')[['date', 'close']].rename(columns={'close': 'p_2330'})\nprice_0050 = dl.taiwan_stock_daily(stock_id='0050', start_date='2018-01-01')[['date', 'close']].rename(columns={'close': 'p_0050'})\nprices = price_2330.merge(price_0050, on='date').sort_values('date').reset_index(drop=True)\nprices['date'] = pd.to_datetime(prices['date'])\n\n# 步驟 4：計算每個訊號日後 60 個交易日的持有報酬\nHOLD_DAYS = 60\nresults = []\nfor sig_date in signal_dates:\n    sig_dt = pd.to_datetime(sig_date)\n    # 找訊號日之後的第一個交易日\n    future = prices[prices['date'] > sig_dt].reset_index(drop=True)\n    if len(future) < HOLD_DAYS:\n        continue\n    entry_price_2330 = future.loc[0, 'p_2330']\n    entry_price_0050 = future.loc[0, 'p_0050']\n    exit_price_2330  = future.loc[HOLD_DAYS - 1, 'p_2330']\n    exit_price_0050  = future.loc[HOLD_DAYS - 1, 'p_0050']\n    ret_2330 = (exit_price_2330 / entry_price_2330 - 1) * 100\n    ret_0050 = (exit_price_0050 / entry_price_0050 - 1) * 100\n    alpha = ret_2330 - ret_0050\n    results.append({'signal_date': sig_date, 'ret_2330': ret_2330,\n                    'ret_0050': ret_0050, 'alpha': alpha})\n\nbt = pd.DataFrame(results)\nif not bt.empty:\n    win_rate   = (bt['ret_2330'] > 0).mean() * 100\n    avg_ret    = bt['ret_2330'].mean()\n    avg_alpha  = bt['alpha'].mean()\n    max_loss   = bt['ret_2330'].min()\n    print('\\n=== 回測報告 ===')\n    print(f'觸發次數：{len(bt)}')\n    print(f'勝率（正報酬）：{win_rate:.1f}%')\n    print(f'平均持有 60 日報酬：{avg_ret:.2f}%')\n    print(f'平均超額報酬 α（vs 0050）：{avg_alpha:.2f}%')\n    print(f'最大單次虧損：{max_loss:.2f}%')\n    conclusion = '有效（持續正 α）' if avg_alpha > 2 else ('無效（無顯著超額）' if avg_alpha < 0 else '條件有效（觀察市場環境）')\n    print(f'訊號結論：{conclusion}')\nelse:\n    print('回測樣本不足，請擴大時間範圍或調整訊號條件')\n\n# 注意：本回測未計入交易成本（約 0.3%/次）與稅負，實際超額報酬應再扣除\n# 潛在偏差：樣本數可能偏少（2018–今約 6 年）；月營收公告時間存在不確定性（需以實際公告日為訊號觸發點）",
+      checklist: [
+        "選定一個 A–F 課程中學過的訊號，寫出明確的觸發條件（含避免未來函數的說明）",
+        "跑完整回測，輸出：觸發次數、勝率、平均報酬、最大單次虧損、vs 大盤超額報酬 α",
+        "判斷訊號結論：有效（持續正 α）/ 無效（無顯著超額）/ 條件有效（特定市場環境下有效）",
+        "識別回測中的至少一個潛在偏差（樣本數不足 / 未來函數 / 交易成本未計），說明如何改善"
+      ]
     }
   ],
 
@@ -277,6 +427,12 @@ const advancedSyllabus = {
     { from: "g6", to: "g7" },
     { from: "g7", to: "g8" },
     { from: "g8", to: "g9" },
-    { from: "g9", to: "g10" }
+    { from: "g9", to: "g10" },
+    { from: "g10", to: "g11" },
+    { from: "g11", to: "g12" },
+    { from: "g12", to: "g13" },
+    { from: "g13", to: "g14" },
+    { from: "g14", to: "g15" },
+    { from: "g15", to: "g16" }
   ]
 };
