@@ -1484,27 +1484,14 @@ footer .footer-disclaimer {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: 0.5rem;
-  /* Always-visible operable scrollbar (Firefox) */
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent-green) rgba(255,255,255,0.06);
+  /* Hide scrollbar (Firefox) */
+  scrollbar-width: none;
+  /* Hide scrollbar (IE/Edge) */
+  -ms-overflow-style: none;
 }
-/* Always-visible operable scrollbar (WebKit / Chrome / Safari) */
+/* Hide scrollbar (WebKit / Chrome / Safari) */
 .skills-modal-body::-webkit-scrollbar {
-  width: 10px;
-  -webkit-appearance: none;
-}
-.skills-modal-body::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.06);
-  border-radius: 5px;
-}
-.skills-modal-body::-webkit-scrollbar-thumb {
-  background: var(--accent-green);
-  border-radius: 5px;
-  border: 2px solid var(--bg-secondary);
-}
-.skills-modal-body::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-green);
-  opacity: 0.85;
+  display: none;
 }
 
 /* Plugin block */
