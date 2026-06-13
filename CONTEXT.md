@@ -68,7 +68,7 @@ Morris 文章中，56 個技能本質上都是**可交付的 SOP**（DCF 九步�
 | F2 | 法說會展望貝氏機率 | `initiating-coverage` |
 | F3 | 籌碼集中信貸力學 | `portfolio-rebalance` |
 
-### 進階科目 G（10 個模組）對齊的技能群
+### 進階科目 G（16 個模組）對齊的技能群
 
 G 科目是「從理解到交付」的橋樑，明確對齊了交付物導向的技能：
 - G1: `dcf-model` / `initiating-coverage`（SOP 化工作流）
@@ -76,6 +76,12 @@ G 科目是「從理解到交付」的橋樑，明確對齊了交付物導向的
 - G3: `idea-generation` / `thesis-tracker`（數據到投資論點）
 - G4: `dcf-model` / `3-statement-model`（端到端估值建模）
 - G5–G10: 覆蓋 `earnings-analysis`、`morning-note`、`portfolio-monitoring` 等
+- G11: `competitive-analysis` / `sector-overview`（供應鏈定位分析）
+- G12: `earnings-preview` / `model-update`（盈餘預估模型與共識比對）
+- G13: `audit-xls`（財報品質與地雷偵測，forensics 延伸）
+- G14: `dcf-model` / `comps-analysis` / `initiating-coverage`（目標價框架：河流圖 + SOTP）
+- G15: `macro-rates-monitor` / `fx-carry-trade`（總經/利率/匯率傳導框架）
+- G16: `idea-generation`（因子回測與訊號驗證，backtest engine）
 
 ### 課程覆蓋範圍評估
 
@@ -174,10 +180,15 @@ G 科目是「從理解到交付」的橋樑，明確對齊了交付物導向的
 | 模組 | 責任 |
 |------|------|
 | `syllabusData.js` | 18 個章節的內容資料庫（標題、公式、題目、FinMind 程式碼）|
-| `advancedData.js` | G 科目 10 個進階模組資料庫（含 checklist 交付物清單）|
-| `app.js` | 主應用邏輯，SVG 地圖渲染，Detail Drawer 控制 |
+| `advancedData.js` | G 科目 **16 個**進階模組資料庫（含 checklist 交付物清單，G1–G16）|
+| `app.js` | 主應用邏輯，SVG 地圖渲染，Detail Drawer 控制，Skills 56 Modal accordion |
 | `answerVerifier.js` | 集中的答案驗證模組（`isCorrect`, `correctIndexOf`, `simpleHash`）|
 | `storage.js` (`FinStorage`) | 集中的 localStorage schema，11 個 KEYS 常數 |
+| `masteryStore.js` | 雙軸通關狀態管理，`examPassed`/`deliverableDone` 讀寫抽象層 |
+| `progressKey.js` | 學習進度金鑰：把全部進度壓縮為 Base62 短字串，跨裝置匯出/匯入/衝突合併 |
+| `onboarding.js` | 首次訪問 Spotlight 導覽（5 步驟），引導新使用者認識地圖介面 |
+| `curriculumQuery.js` | CurriculumQuery seam：統一查詢課程結構（章節、模組、先修關係）|
+| `pythonHighlight.js` | FinMind 程式碼區塊的 Python 語法高亮 |
 | `studyTools.js` | 錯題本 + 起點診斷工具 |
 | `advancedMode.js` | G 科目解鎖邏輯，進階圖譜渲染 |
 | `aiSandbox.js` | AI 分析師沙盒（實驗性，plug-and-play）|
@@ -192,7 +203,23 @@ FinStorage.KEYS.DELIVERABLE_SIG    // 實踐軸：防篡改簽章
 FinStorage.KEYS.COMPLETED_TOPICS   // 最終完成章節列表（雙軸均通過）
 ```
 
+### ProgressKey 金鑰系統
+
+- 鍵值：`finmath_progress_key`（`localStorage`）
+- 格式：Base62 短字串，包含全部 examPassed + deliverableDone + advancedChecks + checklistState
+- 功能：跨裝置備份/還原，新舊進度衝突時提供「覆蓋」或「聯集合併」選項
+- 所有 G 科目模組（G1–G16）的 checklist 狀態均由 `finmath_advanced_checks` key 管理，自動納入金鑰
+
+### Skills 56 Modal
+
+- 觸發：Footer 的「Anthropic FS 56 Skills」按鈕（`#btnSkills56`）
+- 實作：全部 56 個技能硬編碼於 `index.html`，不依賴外部連結
+- 結構：7 個 `.sp-block` plugin 區塊（accordion），點擊 header 展開/折疊
+- Accordion 初始化：`openSkillsModal()` 內首次呼叫時 lazy init，第一個 plugin 預設展開
+- 捲動：`.modal-body.skills-modal-body` 為單一捲動容器，綠色自訂捲動條（WebKit）
+- 參考文件：`anthropic_financial_plugins.md`（56 Skills 完整對照表，含台灣適用性評分）
+
 ---
 
-*最後更新：2026-06-06*
+*最後更新：2026-06-13*
 *文件目的：供 AI Agent 在每次 loop 中參考，確保優化方向符合平台設計初衷。*
