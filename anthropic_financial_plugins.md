@@ -32,6 +32,7 @@
 
 ---
 
+## Core Plugin：financial-analysis
 > **屬性**：Core | **數量**：11 Skills
 
 | # | Skill 名稱 | 繁中功能摘要 | 大小 | 台灣適用性 | 在地化調整方向 |
@@ -50,6 +51,7 @@
 
 ---
 
+## Add-on Plugin：equity-research
 > **屬性**：Add-on | **數量**：9 Skills
 
 | # | Skill 名稱 | 繁中功能摘要 | 大小 | 台灣適用性 | 在地化調整方向 |
@@ -66,11 +68,12 @@
 
 ---
 
+## Add-on Plugin：investment-banking
 > **屬性**：Add-on | **數量**：9 Skills
 
 | # | Skill 名稱 | 繁中功能摘要 | 大小 | 台灣適用性 | 在地化調整方向 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 21 | cim-builder | 機密資訊備忘錄（CIM）草擬：將公司資訊組織為專業的投資人閱讀文件，含執行摘要、業務概覽、財務分析。 | 4K | ★xx | 台灣 M&A 市場較小，CIM 使用場景有限。可改造為「企業募資簡報」或「策略投資人說明書」。 |
+| 21 | cim-builder | 機密資訊備忘錄（CIM）草擬：將公司資訊組織為專業的投資人閱讀文件，含執行摘要、業務概覽、財務分析。 | 4K | ★★★ | 台灣 M&A 市場較小，CIM 使用場景有限。可改造為「企業募資簡報」或「策略投資人說明書」。 |
 | 22 | buyer-list | 賣方 M&A 潛在買家清單：識別策略型與財務型買家、評估適合度、排序接觸優先順序。 | 4K | ★★★ | 概念適用但市場規模差異大。可調整為台灣策略投資人/PE 基金名單管理工具。 |
 | 23 | merger-model | 併購增減益分析：Pro Forma EPS 影響、協同效益敏感度、購買價格分攤（PPA）。 | 4K | ★★★ | 分析邏輯通用。需調整稅率（台灣營所稅 20%）、商譽攤銷規則（IFRS vs. US GAAP 差異）。 |
 | 24 | strip-profile | 投行公司概覽頁（Strip Profile）：單頁或多頁 PPT，四象限佈局涵蓋概覽、業務、財務、股權結構。 | 17K | ★★★★ | 格式通用且實用。台灣版需調整數據源為公開資訊觀測站，加入台股特有資訊（董監持股、質押比）。 |
@@ -124,11 +127,9 @@
 | 48 | fixed-income-portfolio | 固定收益投組審查：多債券定價、參考數據、現金流分析、情境測試。 | 4K | ★★★ | 壽險業/銀行投資部門可用。需接台灣債券數據源。 |
 | 49 | fx-carry-trade | 外匯利差交易評估：即期/遠期匯率、利差、波動率曲面、歷史趨勢綜合分析。 | 4K | ★★★ | 概念適用於台灣外匯交易室。需加入台幣 NDF 特殊性。 |
 | 50 | swap-curve-strategy | 利率交換曲線策略：多天期 IRS 定價、政府債與通膨曲線疊加、陡峭化/平坦化/蝶式交易辨識。 | 4K | ★★ | 台灣 IRS 市場規模小。概念可用於教學或壽險 ALM。 |
-| 51 | macro-rates-monitor | 總經與利率儀表板：總經指標、殖利率曲線、通膨損益平衡、交換利率綜合監控。 | 55K | ★★★★ | 框架通用。需替換為台灣央行利率、台灣 CPI、台灣公債殖利率曲線。 |
+| 51 | macro-rates-monitor | 總經與利率儀表板：總經指標、殖利率曲線、通膨損益平衡、交換利率綜合監控。 | 5K | ★★★★ | 框架通用。需替換為台灣央行利率、台灣 CPI、台灣公債殖利率曲線。 |
 | 52 | option-vol-analysis | 選擇權波動率分析：波動率曲面、Greeks、隱含 vs. 實現波動率比較。 | 4K | ★★★ | 可用於台指選擇權分析。需接台灣期交所數據。 |
-| 53 | equity-research | 股票研究快照：共識預估、公司基本面、歷史價格、總經背景綜合分析（LSEG 版）。 | 4K | ★xx | 需替換為台灣數據源。功能與 Core 的 comps-analysis 有重疊。 |
-
-*(註：第 51 項大小原表為 5K)*
+| 53 | equity-research | 股票研究快照：共識預估、公司基本面、歷史價格、總經背景綜合分析（LSEG 版）。 | 4K | ★★★★ | 需替換為台灣數據源。功能與 Core 的 comps-analysis 有重疊。 |
 
 ---
 
@@ -147,10 +148,10 @@
 
 | 評分 | 說明 | 數量 | 佔比 | 代表 Skills |
 | :--- | :--- | :---: | :---: | :--- |
-| **★★★★★** | 直接適用或稍作修改 | 10 | 18% | audit-xls, clean-data-xls, deal-tracker, thesis-tracker, skill-creator, competitive-analysis 等 |
-| **★★★★** | 概念適用，需替換數據源/法規 | 27 | 48% | dcf-model, comps-analysis, earnings-analysis, client-review, returns-analysis 等 |
-| **★★★** | 部分適用，需大幅改造 | 14 | 25% | initiating-coverage, cim-builder, bond-relative-value, tear-sheet 等 |
-| **★★** | 僅概念可借鏡 | 5 | 9% | lbo-model, process-letter, teaser, bond-futures-basis, swap-curve-strategy |
+| **★★★★★** | 直接適用或稍作修改 | 8 | 14% | audit-xls, clean-data-xls, deck-refresh, ppt-template-creator, skill-creator, competitive-analysis, thesis-tracker, deal-tracker |
+| **★★★★** | 概念適用，需替換數據源/法規 | 25 | 45% | dcf-model, comps-analysis, earnings-analysis, client-review, macro-rates-monitor, equity-research(LSEG) 等 |
+| **★★★** | 部分適用，需大幅改造 | 17 | 30% | initiating-coverage, cim-builder, bond-relative-value, tear-sheet, fx-carry-trade 等 |
+| **★★** | 僅概念可借鏡 | 6 | 11% | lbo-model, process-letter, teaser, tax-loss-harvesting, bond-futures-basis, swap-curve-strategy |
 | **★** | 台灣無對應場景 | 0 | 0% | — |
 | | **合計** | **56** | **100%** | |
 
