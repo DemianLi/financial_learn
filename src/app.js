@@ -1460,6 +1460,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function openSkillsModal() {
+    if (!elements.skillsModal._accordionInit) {
+      elements.skillsModal.querySelectorAll('.sp-block').forEach((block, i) => {
+        const hd = block.querySelector('.sp-hd');
+        const chevron = document.createElement('span');
+        chevron.className = 'sp-chevron';
+        chevron.textContent = '›';
+        hd.appendChild(chevron);
+        hd.addEventListener('click', () => block.classList.toggle('expanded'));
+        if (i === 0) block.classList.add('expanded');
+      });
+      elements.skillsModal._accordionInit = true;
+    }
     elements.skillsModal.classList.add('active');
     window.lockScroll();
   }
