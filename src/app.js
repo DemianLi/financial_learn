@@ -142,6 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
     pkInput:              document.getElementById('pkInput'),
     btnValidateKey:       document.getElementById('btnValidateKey'),
     pkError:              document.getElementById('pkError'),
+
+    // Skills 56 Modal
+    btnSkills56:    document.getElementById('btnSkills56'),
+    skillsModal:    document.getElementById('skillsModal'),
+    btnCloseSkills: document.getElementById('btnCloseSkills'),
     pkConflictSection:    document.getElementById('pkConflictSection'),
     pkDiffSummary:        document.getElementById('pkDiffSummary'),
     btnPkOverwrite:       document.getElementById('btnPkOverwrite'),
@@ -1454,6 +1459,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return `目前進度：已完成 ${curDone} 章基礎課程、${curAdvDone} 個進階模組\n金鑰進度：已完成 ${keyDone} 章基礎課程、${keyAdvDone} 個進階模組`;
   }
 
+  function openSkillsModal() {
+    elements.skillsModal.classList.add('active');
+    window.lockScroll();
+  }
+
   function openSandbox() {
     generateSandboxCode();
     elements.sandboxModal.classList.add('active');
@@ -1721,6 +1731,19 @@ print(df[['date', 'title']].tail(5))
     elements.btnCloseProgressKey.addEventListener('click', () => {
       elements.progressKeyModal.classList.remove('active');
       window.unlockScroll();
+    });
+
+    // Skills 56 Modal
+    elements.btnSkills56.addEventListener('click', openSkillsModal);
+    elements.btnCloseSkills.addEventListener('click', () => {
+      elements.skillsModal.classList.remove('active');
+      window.unlockScroll();
+    });
+    elements.skillsModal.addEventListener('click', e => {
+      if (e.target === elements.skillsModal) {
+        elements.skillsModal.classList.remove('active');
+        window.unlockScroll();
+      }
     });
 
     elements.btnCopyKey.addEventListener('click', () => {
