@@ -1481,12 +1481,8 @@ footer .footer-disclaimer {
   flex-direction: column;
   gap: 1.4rem;
   max-height: 68vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   padding-right: 0.25rem;
-  flex: 1;
-  min-height: 0;
 }
 
 /* Plugin block */
@@ -1597,12 +1593,8 @@ footer .footer-disclaimer {
 @media (max-width: 600px) {
   .sp-grid { grid-template-columns: 1fr; }
   .sk-row { border-right: none; }
-  .skills-modal-body { max-height: none; }  /* flex:1 fills modal height */
-  .sp-block.expanded .sp-grid {
-    max-height: 50vh;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+  .skills-modal-body {
+    max-height: calc(var(--real-vh, 100svh) - 80px);
   }
   .sk-name { font-size: 0.85rem; }
   .sk-desc { font-size: 0.78rem; }
