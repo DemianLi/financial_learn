@@ -1483,7 +1483,6 @@ footer .footer-disclaimer {
   max-height: 68vh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding-right: 0.5rem;
   /* Hide scrollbar (Firefox) */
   scrollbar-width: none;
   /* Hide scrollbar (IE/Edge) */
