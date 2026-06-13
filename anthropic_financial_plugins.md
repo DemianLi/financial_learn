@@ -1,5 +1,3 @@
----
-
 **資料來源**：[GitHub repo](https://github.com/anthropics/financial-services-plugins)（2026.03）｜ Morris 的金融教室
 
 ---
